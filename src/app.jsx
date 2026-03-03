@@ -318,7 +318,7 @@ function App(){
       </div>
 
       {/* Page content */}
-      {page==="home"&&<HomeContent homeTab={homeTab} setHomeTab={setHomeTabWithHash} chatMessages={chatMessages} setChatMessages={setChatMessages} pinnedWidgets={pinnedWidgets} pinWidget={pinWidget} unpinWidget={unpinWidget} overallPct={readinessPct} setConnectOpen={()=>navigate("connect")} industry={onboardIndustry} fromChatOnboarding={fromChatOnboarding} focusGoalName={focusGoalName} selectedGoals={selectedGoals} addedWorkflows={addedWorkflows} setAddedWorkflows={setAddedWorkflows} onNavigate={navigate}/>}
+      {page==="home"&&<HomeContent homeTab={homeTab} setHomeTab={setHomeTabWithHash} chatMessages={chatMessages} setChatMessages={setChatMessages} pinnedWidgets={pinnedWidgets} pinWidget={pinWidget} unpinWidget={unpinWidget} overallPct={readinessPct} setConnectOpen={()=>navigate("connect")} industry={onboardIndustry} fromChatOnboarding={fromChatOnboarding} focusGoalName={focusGoalName} selectedGoals={selectedGoals} addedWorkflows={addedWorkflows} setAddedWorkflows={setAddedWorkflows} onNavigate={navigate} installedApps={installedApps}/>}
       {page==="builder"&&<div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
         {builderMode==="build"?<BuildMode/>:<EditMode/>}
       </div>}

@@ -57,6 +57,7 @@ const AI_FALLBACK={text:"I understand — let me look into that for you. In the 
 
 /* ═══ WIDGET CATALOGUE ═══ */
 const AVAILABLE_WIDGETS=[
+  {type:"agentBriefing",label:"Agent Briefing",desc:"Alerts from your app agents",icon:IC.sparkle,color:T.accent},
   {type:"taskList",label:"Tasks",desc:"Today's task list",icon:IC.tasks,color:T.accent},
   {type:"velocity",label:"Velocity",desc:"Team velocity trend",icon:IC.chart,color:T.green},
   {type:"completion",label:"Completion",desc:"Completion rate",icon:IC.chart,color:T.highlight},

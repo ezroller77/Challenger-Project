@@ -148,6 +148,7 @@ const AI_FALLBACK={text:"I understand — let me look into that for you. In the 
 
 /* ═══ WIDGET CATALOGUE ═══ */
 const AVAILABLE_WIDGETS=[
+  {type:"agentBriefing",label:"Agent Briefing",desc:"Alerts from your app agents",icon:IC.sparkle,color:T.accent},
   {type:"taskList",label:"Tasks",desc:"Today's task list",icon:IC.tasks,color:T.accent},
   {type:"velocity",label:"Velocity",desc:"Team velocity trend",icon:IC.chart,color:T.green},
   {type:"completion",label:"Completion",desc:"Completion rate",icon:IC.chart,color:T.highlight},
@@ -8811,11 +8812,77 @@ function QuickStatsWidget({mode,industry}){
   </div>;
 }
 
-/* ═══ WIDGET DISPATCHER ═══ */
-const WIDGET_MAP={taskList:TaskListWidget,velocity:VelocityWidget,completion:CompletionWidget,revenue:RevenueWidget,activity:ActivityWidget,quickStats:QuickStatsWidget};
-const WIDGET_LABELS={taskList:"Tasks",velocity:"Velocity",completion:"Completion",revenue:"Revenue",activity:"Activity",quickStats:"Stats"};
+/* ═══ AGENT BRIEFING WIDGET ═══ */
+function AgentBriefingWidget({mode,industry,installedApps,onNavigate}){
+  /* Collect alerts from installed apps' agents */
+  const apps=installedApps||[];
+  const briefings=apps.map(appId=>{
+    const agentData=APP_AGENT_INSIGHTS[appId];
+    const appInfo=APP_CATALOG.find(a=>a.id===appId);
+    if(!agentData||!appInfo)return null;
+    const alert=agentData.insights.find(i=>i.type==="alert");
+    return{appId,agent:agentData.agent,appName:appInfo.name,color:appInfo.color,proactive:agentData.proactive,alert,severity:alert?alert.severity:"low"};
+  }).filter(Boolean);
+  /* Sort: high severity first */
+  briefings.sort((a,b)=>{const o={high:0,medium:1,positive:2,low:3};return(o[a.severity]||3)-(o[b.severity]||3);});
+  const alertCount=briefings.filter(b=>b.severity==="high").length;
 
-function ChatWidget({widget,mode,isPinned,onPin,onUnpin,industry}){
+  if(briefings.length===0){
+    return<div>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+        <div style={{width:32,height:32,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.sparkle(T.accent)}</div>
+        <div><div style={{fontSize:13,fontWeight:600,letterSpacing:"-0.01em"}}>Agent Briefing</div><div style={{fontSize:11,color:T.textTertiary,marginTop:1}}>No apps installed yet</div></div>
+      </div>
+      <div style={{fontSize:12,color:T.textTertiary,lineHeight:1.5}}>Install apps from the Catalog to see agent insights here.</div>
+    </div>;
+  }
+
+  if(mode==="pinned"){
+    /* Compact view — show top 4 */
+    const shown=briefings.slice(0,4);
+    return<div>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+        <div style={{width:32,height:32,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.sparkle(T.accent)}</div>
+        <div><div style={{fontSize:13,fontWeight:600,letterSpacing:"-0.01em"}}>Agent Briefing</div><div style={{fontSize:11,color:T.textTertiary,marginTop:1}}>{alertCount>0?`${alertCount} item${alertCount!==1?"s":""} need${alertCount===1?"s":""} attention`:"All clear"}</div></div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+        {shown.map((b,i)=>{
+          const sevCol=b.severity==="high"?T.rose:b.severity==="medium"?T.amber:T.green;
+          const sevBg=b.severity==="high"?T.roseSoft:b.severity==="medium"?T.amberSoft:T.greenSoft;
+          return<div key={i} onClick={()=>{window.location.hash="#app/"+b.appId;}} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:T.rSm,background:T.surfaceHover,border:`1px solid ${T.borderSubtle}`,cursor:"pointer",transition:"all 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=b.color+"50";e.currentTarget.style.background=b.color+"08";}} onMouseLeave={e=>{e.currentTarget.style.borderColor=T.borderSubtle;e.currentTarget.style.background=T.surfaceHover;}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:sevCol,flexShrink:0}}/>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:12,fontWeight:600,color:T.text,letterSpacing:"-0.01em",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{b.agent}</div>
+              <div style={{fontSize:11,color:T.textSecondary,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{b.alert?b.alert.title:b.proactive?.message?.slice(0,60)+"..."}</div>
+            </div>
+            <span style={{fontSize:9,fontFamily:T.mono,padding:"2px 7px",borderRadius:99,background:sevBg,color:sevCol,fontWeight:600,flexShrink:0}}>{b.severity==="high"?"Alert":b.severity==="medium"?"Watch":"OK"}</span>
+            {IC.chevRight(T.textTertiary,12)}
+          </div>;
+        })}
+      </div>
+      {briefings.length>4&&<div style={{fontSize:11,color:T.textTertiary,marginTop:8,textAlign:"center"}}>+{briefings.length-4} more agent{briefings.length-4!==1?"s":""}</div>}
+    </div>;
+  }
+
+  /* Inline (chat) mode — more compact */
+  return<div>
+    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:10}}>
+      {IC.sparkle(T.accent,12)}
+      <span style={{fontSize:12,fontWeight:600,color:T.text}}>Agent Briefing</span>
+      {alertCount>0&&<span style={{fontSize:9,fontFamily:T.mono,padding:"1px 6px",borderRadius:99,background:T.roseSoft,color:T.rose,fontWeight:600}}>{alertCount} alert{alertCount!==1?"s":""}</span>}
+    </div>
+    {briefings.slice(0,3).map((b,i)=><div key={i} style={{fontSize:12,color:T.textSecondary,padding:"4px 0",display:"flex",alignItems:"center",gap:6}}>
+      <div style={{width:6,height:6,borderRadius:"50%",background:b.severity==="high"?T.rose:b.severity==="medium"?T.amber:T.green,flexShrink:0}}/>
+      <span style={{fontWeight:500,color:T.text}}>{b.agent}:</span> {b.alert?b.alert.title:"All clear"}
+    </div>)}
+  </div>;
+}
+
+/* ═══ WIDGET DISPATCHER ═══ */
+const WIDGET_MAP={agentBriefing:AgentBriefingWidget,taskList:TaskListWidget,velocity:VelocityWidget,completion:CompletionWidget,revenue:RevenueWidget,activity:ActivityWidget,quickStats:QuickStatsWidget};
+const WIDGET_LABELS={agentBriefing:"Agent Briefing",taskList:"Tasks",velocity:"Velocity",completion:"Completion",revenue:"Revenue",activity:"Activity",quickStats:"Stats"};
+
+function ChatWidget({widget,mode,isPinned,onPin,onUnpin,industry,installedApps,onNavigate}){
   const Comp=WIDGET_MAP[widget.type];
   if(!Comp) return null;
   const pinned=isPinned;
@@ -8824,7 +8891,7 @@ function ChatWidget({widget,mode,isPinned,onPin,onUnpin,industry}){
     <div onClick={()=>pinned?onUnpin(widget.type):onPin(widget.type)} style={{position:"absolute",top:mode==="pinned"?10:8,right:mode==="pinned"?10:8,width:26,height:26,borderRadius:7,background:pinned?T.highlightSoft:T.surfaceMuted,border:`1px solid ${pinned?T.highlightBorder:T.border}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:"all 0.15s",zIndex:2,opacity:mode==="pinned"?1:0.6}} onMouseEnter={e=>{e.currentTarget.style.opacity="1";e.currentTarget.style.transform="scale(1.08)";}} onMouseLeave={e=>{e.currentTarget.style.opacity=mode==="pinned"?"1":"0.6";e.currentTarget.style.transform="scale(1)";}} title={pinned?"Unpin from dashboard":"Pin to dashboard"}>
       {IC.pin(pinned?T.highlight:T.textTertiary,10)}
     </div>
-    <Comp mode={mode} industry={industry}/>
+    <Comp mode={mode} industry={industry} installedApps={installedApps} onNavigate={onNavigate}/>
   </div>;
 }
 
@@ -9126,7 +9193,7 @@ function WidgetPicker({open,onClose,pinnedWidgets,onAdd}){
 }
 
 /* ═══ DASHBOARD VIEW (Full Screen) ═══ */
-function DashboardView({pinnedWidgets,pinWidget,unpinWidget,industry}){
+function DashboardView({pinnedWidgets,pinWidget,unpinWidget,industry,installedApps,onNavigate}){
   const[pickerOpen,setPickerOpen]=useState(false);
   const now=new Date();
   const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -9163,7 +9230,7 @@ function DashboardView({pinnedWidgets,pinWidget,unpinWidget,industry}){
     {/* Widget grid */}
     {hasPinned?<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:14}}>
       {pinnedWidgets.map((type,idx)=><div key={type} style={{animation:`fadeIn 0.4s ease ${idx*0.08}s both`}}>
-        <ChatWidget widget={{type}} mode="pinned" isPinned={true} onPin={pinWidget} onUnpin={unpinWidget} industry={industry}/>
+        <ChatWidget widget={{type}} mode="pinned" isPinned={true} onPin={pinWidget} onUnpin={unpinWidget} industry={industry} installedApps={installedApps} onNavigate={onNavigate}/>
       </div>)}
     </div>:
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:320,animation:"fadeIn 0.5s ease"}}>
@@ -9198,11 +9265,11 @@ function HomeTabBar({homeTab,setHomeTab}){
 }
 
 /* ═══ HOME CONTENT (Router) ═══ */
-function HomeContent({homeTab,setHomeTab,chatMessages,setChatMessages,pinnedWidgets,pinWidget,unpinWidget,overallPct,setConnectOpen,industry,fromChatOnboarding,focusGoalName,selectedGoals,addedWorkflows,setAddedWorkflows,onNavigate}){
+function HomeContent({homeTab,setHomeTab,chatMessages,setChatMessages,pinnedWidgets,pinWidget,unpinWidget,overallPct,setConnectOpen,industry,fromChatOnboarding,focusGoalName,selectedGoals,addedWorkflows,setAddedWorkflows,onNavigate,installedApps}){
   return<div style={{display:"flex",flexDirection:"column",height:"calc(100vh - 56px)",overflow:"hidden"}}>
     <HomeTabBar homeTab={homeTab} setHomeTab={setHomeTab}/>
     {homeTab==="dashboard"
-      ?<DashboardView pinnedWidgets={pinnedWidgets} pinWidget={pinWidget} unpinWidget={unpinWidget} industry={industry}/>
+      ?<DashboardView pinnedWidgets={pinnedWidgets} pinWidget={pinWidget} unpinWidget={unpinWidget} industry={industry} installedApps={installedApps} onNavigate={onNavigate}/>
       :<ChatView chatMessages={chatMessages} setChatMessages={setChatMessages} pinnedWidgets={pinnedWidgets} pinWidget={pinWidget} unpinWidget={unpinWidget} industry={industry} fromChatOnboarding={fromChatOnboarding} focusGoalName={focusGoalName} selectedGoals={selectedGoals} addedWorkflows={addedWorkflows} setAddedWorkflows={setAddedWorkflows} onNavigate={onNavigate}/>
     }
   </div>;
@@ -9528,7 +9595,7 @@ function App(){
       </div>
 
       {/* Page content */}
-      {page==="home"&&<HomeContent homeTab={homeTab} setHomeTab={setHomeTabWithHash} chatMessages={chatMessages} setChatMessages={setChatMessages} pinnedWidgets={pinnedWidgets} pinWidget={pinWidget} unpinWidget={unpinWidget} overallPct={readinessPct} setConnectOpen={()=>navigate("connect")} industry={onboardIndustry} fromChatOnboarding={fromChatOnboarding} focusGoalName={focusGoalName} selectedGoals={selectedGoals} addedWorkflows={addedWorkflows} setAddedWorkflows={setAddedWorkflows} onNavigate={navigate}/>}
+      {page==="home"&&<HomeContent homeTab={homeTab} setHomeTab={setHomeTabWithHash} chatMessages={chatMessages} setChatMessages={setChatMessages} pinnedWidgets={pinnedWidgets} pinWidget={pinWidget} unpinWidget={unpinWidget} overallPct={readinessPct} setConnectOpen={()=>navigate("connect")} industry={onboardIndustry} fromChatOnboarding={fromChatOnboarding} focusGoalName={focusGoalName} selectedGoals={selectedGoals} addedWorkflows={addedWorkflows} setAddedWorkflows={setAddedWorkflows} onNavigate={navigate} installedApps={installedApps}/>}
       {page==="builder"&&<div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
         {builderMode==="build"?<BuildMode/>:<EditMode/>}
       </div>}
