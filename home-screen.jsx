@@ -1526,7 +1526,7 @@ function LensToggle({lens,setLens}){
 /* ═══ SIDEBAR (Persistent push + icon-rail collapse) ═══ */
 function Sidebar({mode,onToggle,onNavigate,activePage,brandName,brandLogoUrl,onSettings,installedApps}){
   const expanded=mode==="expanded";
-  const W=expanded?240:56;
+  const W=expanded?240:0;
 
   /* ── Nav items (flat, no section headings) ── */
   const topNav=[
@@ -8989,7 +8989,7 @@ function App(){
   const[phase,setPhase]=useState(initRoute.phase);
 
   const[sidebarMode,setSidebarMode]=useState("expanded");
-  const SIDEBAR_W=sidebarMode==="expanded"?240:56;
+  const SIDEBAR_W=sidebarMode==="expanded"?240:0;
   const[settingsOpen,setSettingsOpen]=useState(false);
   const[chatMessages,setChatMessages]=useState(INITIAL_MESSAGES);
   const[pinnedWidgets,setPinnedWidgets]=useState([]);

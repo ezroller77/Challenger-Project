@@ -1,7 +1,7 @@
 /* ═══ SIDEBAR (Persistent push + icon-rail collapse) ═══ */
 function Sidebar({mode,onToggle,onNavigate,activePage,brandName,brandLogoUrl,onSettings,installedApps}){
   const expanded=mode==="expanded";
-  const W=expanded?240:56;
+  const W=expanded?240:0;
 
   /* ── Nav items (flat, no section headings) ── */
   const topNav=[
