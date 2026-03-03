@@ -2519,7 +2519,18 @@ const PERSONA_DESCS={
 };
 
 function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setFocusGoalName}){
-  const[messages,setMessages]=useState([]);
+  const[messages,setMessages]=useState([
+    {id:"ai-pre-1",role:"ai",parts:[
+      {type:"text",content:"Hey! I'm your setup assistant. I'll help get your workspace configured in about a minute."},
+      {type:"text",content:"First \u2014 what's your name and company?"},
+    ]},
+    {id:"u-pre-1",role:"user",text:"Michael, RC Marine Ops"},
+    {id:"ai-pre-2",role:"ai",parts:[
+      {type:"company-card",name:"Michael",company:"RC Marine Ops",website:"rcmarineops.com"},
+      {type:"text",content:"Is that right?"},
+    ]},
+    {id:"u-pre-2",role:"user",text:"That's correct"},
+  ]);
   const[step,setStep]=useState("intro");
   const[typing,setTyping]=useState(false);
   const[chosenIndustry,setChosenIndustry]=useState(null);
@@ -2528,6 +2539,7 @@ function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setF
   const[chosenFocus,setChosenFocus]=useState(null);
   const[chosenInterest,setChosenInterest]=useState(null);
   const endRef=useRef(null);
+  const initRef=useRef(false);
 
   const scrollBottom=()=>{setTimeout(()=>{if(endRef.current)endRef.current.scrollIntoView({behavior:"smooth"});},60);};
 
@@ -2536,7 +2548,7 @@ function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setF
     setTyping(true);scrollBottom();
     setTimeout(()=>{
       setTyping(false);
-      setMessages(prev=>[...prev,{id:`ai-${Date.now()}`,role:"ai",parts}]);
+      setMessages(prev=>[...prev,{id:`ai-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,role:"ai",parts}]);
       if(nextStep)setStep(nextStep);
       scrollBottom();
     },delay);
@@ -2548,11 +2560,13 @@ function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setF
     scrollBottom();
   };
 
-  /* ── Kick off intro ── */
+  /* ── Kick off with industry question (after pre-loaded name/company exchange) ── */
   useEffect(()=>{
+    if(initRef.current)return;
+    initRef.current=true;
     addAI([
-      {type:"text",content:"Hey! I'm your setup assistant. I'll help get your workspace configured in about a minute."},
-      {type:"text",content:"Let's start \u2014 what industry are you in?"},
+      {type:"text",content:"Great, nice to meet you Michael! Let's get RC Marine Ops set up."},
+      {type:"text",content:"What industry are you in?"},
       {type:"options",key:"industry",options:INDUSTRIES.map(ind=>({
         id:ind.id,label:ind.label,sub:ind.desc,color:ind.color,
       }))},
@@ -2747,6 +2761,19 @@ function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setF
             </div>
           </div>;
         })}
+      </div>;
+    }
+
+    if(part.type==="company-card"){
+      return<div key={idx} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",borderRadius:14,background:`${T.accent}06`,border:`1px solid ${T.border}`,marginTop:4,marginBottom:2}}>
+        <div style={{width:44,height:44,borderRadius:12,background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 2px 8px rgba(28,25,23,0.1)"}}>
+          {IC.home("#fff",18)}
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:15,fontWeight:600,letterSpacing:"-0.02em",fontFamily:T.serif}}>Hi, {part.name}!</div>
+          <div style={{fontSize:12.5,color:T.textSecondary,marginTop:2}}>{part.company}</div>
+          <div style={{fontSize:11,color:T.textTertiary,fontFamily:T.mono,marginTop:2}}>{part.website}</div>
+        </div>
       </div>;
     }
 
