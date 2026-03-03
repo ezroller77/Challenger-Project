@@ -120,6 +120,7 @@ function App(){
   const[brandName,setBrandName]=useState("RC Marine Ops");
   const[brandLogoUrl,setBrandLogoUrl]=useState("");
   const[onboardIndustry,setOnboardIndustry]=useState("");
+  const from100Day=useRef(false);
   const[onboardPersona,setOnboardPersona]=useState("");
   const[selectedGoals,setSelectedGoals]=useState([]);
   const[installedApps,setInstalledApps]=useState([]);
@@ -204,6 +205,21 @@ function App(){
     return<StarterScreen onSelectJourney={(id)=>{
       if(id==="first-setup"){setPhase("onboarding");window.location.hash="#onboarding";}
       if(id==="chat-setup") setPhase("chat-onboarding");
+      if(id==="100-day"){
+        const p=HUNDRED_DAY_PRESET;
+        from100Day.current=true;
+        setBrandName(p.brandName);
+        setOnboardIndustry(p.onboardIndustry);
+        setOnboardPersona(p.onboardPersona);
+        setSelectedGoals(p.selectedGoals);
+        setInstalledApps(p.installedApps);
+        setAddedConnectors(p.addedConnectors);
+        setAddedWorkflows(p.addedWorkflows);
+        setPinnedWidgets(p.pinnedWidgets);
+        setChatMessages(p.chatMessages);
+        setFromChatOnboarding(false);
+        setPhase("configuring");
+      }
     }}/>;
   }
 
@@ -241,7 +257,16 @@ function App(){
 
   /* ── Configuring phase (animation interstitial) ── */
   if(phase==="configuring"){
-    return<ConfiguringScreen onDone={()=>{setChatMessages([]);setWipeIn(true);setPhase("workspace");setHomeTab("chat");window.location.hash="#home/chat";setTimeout(()=>setWipeIn(false),800);}}/>;
+    return<ConfiguringScreen onDone={()=>{
+      setWipeIn(true);setPhase("workspace");setTimeout(()=>setWipeIn(false),800);
+      if(from100Day.current){
+        from100Day.current=false;
+        setChatMessages(HUNDRED_DAY_PRESET.chatMessages);
+        setHomeTab("dashboard");window.location.hash="#home/dashboard";
+      }else{
+        setChatMessages([]);setHomeTab("chat");window.location.hash="#home/chat";
+      }
+    }}/>;
   }
 
   /* ── Workspace phase ── */

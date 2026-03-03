@@ -5,7 +5,7 @@ function StarterScreen({onSelectJourney}){
     {id:"first-setup",title:"First-time Setup",desc:"Walk through the onboarding flow: pick an industry, role, and goals.",icon:IC.sparkle,color:T.highlight,colorSoft:T.highlightSoft,enabled:true},
     {id:"chat-setup",title:"Chat Setup",desc:"Set up your workspace through a conversation with the AI assistant.",icon:chatIcon,color:T.accent,colorSoft:T.accentSoft,enabled:true},
     {id:"first-day",title:"Your First Day",desc:"See what the workspace looks like on day one. (Coming soon)",icon:IC.play,color:T.green,colorSoft:T.greenSoft,enabled:false},
-    {id:"30-day",title:"30-Day Review",desc:"Review progress and refine your setup. (Coming soon)",icon:IC.chart,color:T.violet,colorSoft:T.violetSoft,enabled:false},
+    {id:"100-day",title:"100 Days Later",desc:"See a mature QSR workspace after 100 days of active use.",icon:IC.building,color:T.amber,colorSoft:T.amberSoft,enabled:true},
   ];
 
   return<div style={{minHeight:"100vh",background:T.bg,fontFamily:T.sans,color:T.text,display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 16px"}}>

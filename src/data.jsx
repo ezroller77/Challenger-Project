@@ -774,6 +774,36 @@ const APP_CATALOG=[
     ],
     requiredConnectors:["dtt","pos","kds"],
   },
+  {
+    id:"brand-standards",name:"Brand Standards & Compliance",
+    description:"Brand audit management, mystery shop tracking, and franchise compliance scoring",
+    color:T.violet,category:"Compliance",industry:"qsr",
+    goalIds:["qsr-audit-scores","qsr-food-quality","qsr-consistency","qsr-franchise-compliance"],
+    workflows:[
+      {id:"wf-brand-audit",name:"Brand Standards Audit",desc:"Full-location brand compliance assessment covering cleanliness, food presentation, and service standards",steps:18},
+      {id:"wf-mystery-shop",name:"Mystery Shop Review",desc:"Process and score incoming mystery shopper reports",steps:8},
+    ],
+    dashboards:[
+      {id:"db-brand-compliance",name:"Brand Compliance",desc:"Audit scores, trends, and location comparison"},
+      {id:"db-mystery-shop",name:"Mystery Shop Tracker",desc:"Shop scores by location and improvement areas"},
+    ],
+    requiredConnectors:["audit","pos"],
+  },
+  {
+    id:"incident-mgmt",name:"Incident Management",
+    description:"Incident reporting, investigation workflows, and corrective action tracking",
+    color:T.rose,category:"Safety",industry:"qsr",
+    goalIds:["qsr-food-safety","qsr-audit-scores","qsr-guest-satisfaction"],
+    workflows:[
+      {id:"wf-incident-report",name:"Incident Report",desc:"Structured incident capture with severity classification and immediate actions",steps:10},
+      {id:"wf-investigation",name:"Investigation Workflow",desc:"Root cause analysis and corrective action plan for reported incidents",steps:12},
+    ],
+    dashboards:[
+      {id:"db-incident-tracker",name:"Incident Tracker",desc:"Open incidents, severity trends, and CAPA status"},
+      {id:"db-capa",name:"CAPA Dashboard",desc:"Corrective and preventive action tracking and closure rates"},
+    ],
+    requiredConnectors:["fst","audit"],
+  },
 
   /* ────── Transport & Logistics ────── */
   {
@@ -1007,6 +1037,26 @@ const APP_AGENT_INSIGHTS={
       {type:"recommendation",title:"Enable order throttling",desc:"When kitchen queue exceeds 8 tickets, auto-throttling delivery orders could prevent quality drops.",severity:"medium",time:"3 hrs ago"},
     ],
   },
+  "brand-standards":{
+    agent:"Brand Standards Agent",
+    status:"active",
+    lastRun:"20 min ago",
+    insights:[
+      {type:"alert",title:"Location #7 audit score dropped",desc:"Store #7 scored 74% on latest brand audit — down from 89%. Restroom cleanliness and menu board accuracy were main deductions.",severity:"high",time:"20 min ago"},
+      {type:"trend",title:"System-wide audit average up 3 pts",desc:"Average brand audit score across 12 locations improved from 86% to 89% over the last 60 days.",severity:"positive",time:"2 hrs ago"},
+      {type:"recommendation",title:"Schedule mystery shops for Q2",desc:"4 locations haven't had a mystery shop in 45+ days. Scheduling before month-end ensures consistent coverage.",severity:"medium",time:"5 hrs ago"},
+    ],
+  },
+  "incident-mgmt":{
+    agent:"Incident Agent",
+    status:"active",
+    lastRun:"12 min ago",
+    insights:[
+      {type:"alert",title:"Slip-and-fall reported at Store #3",desc:"Guest slip-and-fall in dining area at 11:42am. First aid administered, incident report filed. Floor mat was displaced.",severity:"high",time:"12 min ago"},
+      {type:"trend",title:"Incident volume down 18%",desc:"Total reported incidents dropped from 11 to 9 month-over-month. Burns category showed largest improvement.",severity:"positive",time:"3 hrs ago"},
+      {type:"recommendation",title:"Close 3 overdue CAPAs",desc:"3 corrective actions from February incidents are past their 14-day closure target. Escalation recommended.",severity:"medium",time:"6 hrs ago"},
+    ],
+  },
   /* Transport & Logistics */
   "fleet-ops":{
     agent:"Fleet Agent",
@@ -1167,6 +1217,9 @@ const APP_TABLE_MAP={
   "safety-compliance":["risk-register"],
   "mfg-maintenance":["asset-register"],
   "food-safety":["food-safety"],
+  "qsr-inventory-mgmt":["food-safety"],
+  "brand-standards":["compliance-log"],
+  "incident-mgmt":["incident-log"],
   "fleet-ops":["fleet-register"],
   "dock-ops":["fleet-register"],
   "delivery-tracking":["fleet-register"],
@@ -1188,6 +1241,18 @@ const APP_RECOMMENDED_WORKFLOWS={
   "food-safety":[
     {name:"Supplier Audit",desc:"Periodic supplier food safety audit",configImpact:9},
     {name:"Allergen Management",desc:"Cross-contamination prevention checklist",configImpact:7},
+  ],
+  "qsr-inventory-mgmt":[
+    {name:"Count Variance Escalation",desc:"Auto-escalate when variance exceeds 5%",configImpact:8},
+    {name:"Supplier Delivery Check",desc:"Verify incoming deliveries against PO",configImpact:7},
+  ],
+  "brand-standards":[
+    {name:"Corrective Action Plan",desc:"Auto-assign fixes when audit score drops below 85%",configImpact:9},
+    {name:"Pre-Audit Self-Check",desc:"Manager self-assessment before formal audit",configImpact:6},
+  ],
+  "incident-mgmt":[
+    {name:"Auto-Escalation Rules",desc:"Escalate high-severity incidents to district manager",configImpact:8},
+    {name:"Post-Incident Review",desc:"Structured review meeting 48 hours after incident",configImpact:7},
   ],
   "fleet-ops":[
     {name:"Accident Investigation",desc:"Post-incident investigation workflow",configImpact:8},
@@ -1226,6 +1291,24 @@ const APP_DASHBOARD_METRICS={
     {label:"Inspections (30d)",value:"89",trend:7,color:T.green},
     {label:"Overdue Actions",value:"1",trend:-2,color:T.green},
   ],
+  "qsr-inventory-mgmt":[
+    {label:"Food Cost %",value:"28.4%",trend:-0.6,color:T.green},
+    {label:"Waste (% of COGS)",value:"3.2%",trend:-0.4,color:T.green},
+    {label:"Count Accuracy",value:"97.1%",trend:1.3,color:T.green},
+    {label:"Out-of-Stocks",value:"2",trend:-3,color:T.green},
+  ],
+  "brand-standards":[
+    {label:"Avg Audit Score",value:"89%",trend:3,color:T.green},
+    {label:"Locations ≥85%",value:"10/12",trend:2,color:T.green},
+    {label:"Open CAPAs",value:"4",trend:-2,color:T.amber},
+    {label:"Mystery Shop Avg",value:"91%",trend:1.5,color:T.green},
+  ],
+  "incident-mgmt":[
+    {label:"Open Incidents",value:"3",trend:-2,color:T.green},
+    {label:"Avg Resolution",value:"2.4 days",trend:-0.8,color:T.green},
+    {label:"Incidents (30d)",value:"9",trend:-2,color:T.green},
+    {label:"Overdue CAPAs",value:"3",trend:1,color:T.rose},
+  ],
   "fleet-ops":[
     {label:"Fleet Uptime",value:"91.4%",trend:0.8,color:T.green},
     {label:"HOS Compliance",value:"98%",trend:1,color:T.green},
@@ -1239,6 +1322,9 @@ const APP_CHART_DATA={
   "safety-compliance":[45,52,48,55,62,58,65,71,68,74,78,82],
   "mfg-maintenance":[60,58,65,62,70,68,75,72,80,84,87,87],
   "food-safety":[85,88,84,90,92,89,94,96,93,95,96,96],
+  "qsr-inventory-mgmt":[68,65,70,72,74,71,76,78,80,82,84,85],
+  "brand-standards":[74,76,72,78,80,82,84,86,85,88,89,89],
+  "incident-mgmt":[55,58,52,60,64,62,68,72,70,75,78,80],
   "fleet-ops":[70,72,68,75,78,74,80,82,85,88,90,91],
 };
 
@@ -1274,6 +1360,30 @@ const APP_ACTIVITY_SEEDS={
     {type:"workflow",text:"Closing inspection submitted",time:"Yesterday",user:"Shift Manager",score:91},
     {type:"connector",text:"Food safety system sync completed",time:"Yesterday",user:"System"},
   ],
+  "qsr-inventory-mgmt":[
+    {type:"workflow",text:"End-of-day waste log submitted — 3.1% waste",time:"18 min ago",user:"Shift Manager",score:92},
+    {type:"issue",text:"Lettuce count variance 8% — above threshold",time:"2 hrs ago",user:"Team Lead"},
+    {type:"connector",text:"POS inventory sync — 142 items updated",time:"3 hrs ago",user:"System"},
+    {type:"inspection",text:"Walk-in inventory count completed",time:"Yesterday",user:"Team Lead",score:97},
+    {type:"workflow",text:"Supplier delivery verified — PO #4821",time:"Yesterday",user:"Shift Manager",score:100},
+    {type:"agent",text:"Inventory Agent flagged fry oil reorder needed",time:"Yesterday",user:"System"},
+  ],
+  "brand-standards":[
+    {type:"inspection",text:"Brand Standards Audit — Store #4 completed",time:"20 min ago",user:"District Manager",score:91},
+    {type:"workflow",text:"Mystery Shop Report processed — Store #9",time:"2 hrs ago",user:"System",score:88},
+    {type:"issue",text:"Menu board pricing mismatch at Store #7",time:"4 hrs ago",user:"Area Manager"},
+    {type:"escalation",text:"Store #7 corrective action plan overdue",time:"Yesterday",user:"System"},
+    {type:"connector",text:"Audit system sync — 6 reports updated",time:"Yesterday",user:"System"},
+    {type:"inspection",text:"Pre-audit self-check — Store #11 completed",time:"2 days ago",user:"Store Manager",score:94},
+  ],
+  "incident-mgmt":[
+    {type:"issue",text:"Slip-and-fall reported — Store #3 dining area",time:"12 min ago",user:"Shift Manager"},
+    {type:"escalation",text:"High-severity incident escalated to District Manager",time:"12 min ago",user:"System"},
+    {type:"workflow",text:"Incident investigation completed — burn #IR-089",time:"3 hrs ago",user:"Safety Officer",score:100},
+    {type:"workflow",text:"CAPA closed — fryer guard installation verified",time:"Yesterday",user:"Maintenance"},
+    {type:"issue",text:"Minor cut reported — prep station",time:"Yesterday",user:"Team Member"},
+    {type:"connector",text:"Incident system sync — 4 records updated",time:"2 days ago",user:"System"},
+  ],
   "fleet-ops":[
     {type:"inspection",text:"Pre-trip inspection — Unit 2847 passed",time:"30 min ago",user:"Driver",score:100},
     {type:"workflow",text:"Fuel audit — Route 12 reconciled",time:"2 hrs ago",user:"Fleet Coordinator",score:96},
@@ -1305,6 +1415,22 @@ const APP_PEOPLE_SEEDS={
     {name:"Maria Santos",role:"Shift Manager",initials:"MS"},
     {name:"Tyler Brooks",role:"Team Lead",initials:"TB"},
     {name:"Aisha Khan",role:"Food Safety Officer",initials:"AK"},
+  ],
+  "qsr-inventory-mgmt":[
+    {name:"Carlos Rivera",role:"Inventory Manager",initials:"CR"},
+    {name:"Priya Patel",role:"Supply Chain Analyst",initials:"PP"},
+    {name:"Jason Kim",role:"Shift Manager",initials:"JK"},
+  ],
+  "brand-standards":[
+    {name:"Rachel Adams",role:"Brand Standards Manager",initials:"RA"},
+    {name:"Derek Walsh",role:"Area Manager",initials:"DW"},
+    {name:"Nina Okafor",role:"Mystery Shop Coordinator",initials:"NO"},
+    {name:"Greg Hoffman",role:"District Manager",initials:"GH"},
+  ],
+  "incident-mgmt":[
+    {name:"Laura Chen",role:"Safety Officer",initials:"LC"},
+    {name:"Marcus Brown",role:"Risk Manager",initials:"MB"},
+    {name:"Tanya Reid",role:"District Manager",initials:"TR"},
   ],
   "fleet-ops":[
     {name:"Dan Kowalski",role:"Fleet Manager",initials:"DK"},
@@ -1363,6 +1489,33 @@ function getAppPeople(appId){
     {name:"Team Member",role:"Assigned",initials:"TM"},
   ];
 }
+
+/* ═══ 100 DAYS LATER PRESET ═══ */
+const HUNDRED_DAY_PRESET={
+  brandName:"Burger Republic",
+  onboardIndustry:"qsr",
+  onboardPersona:"District Manager",
+  selectedGoals:[
+    "qsr-food-safety","qsr-food-quality","qsr-audit-scores",
+    "qsr-speed","qsr-accuracy","qsr-guest-satisfaction",
+    "qsr-labor-cost","qsr-scheduling","qsr-training","qsr-retention",
+    "qsr-waste","qsr-food-cost",
+    "qsr-drive-thru",
+    "qsr-consistency",
+  ],
+  installedApps:["food-safety","brand-standards","qsr-inventory-mgmt","incident-mgmt"],
+  addedConnectors:["fst","audit","pos","dtt","kds","wfm","inv","dsp"],
+  addedWorkflows:[
+    "wf-opening-checklist","wf-temp-log",
+    "wf-brand-audit","wf-mystery-shop",
+    "wf-waste-tracking",
+    "wf-incident-report","wf-investigation",
+  ],
+  pinnedWidgets:["taskList","activity","quickStats"],
+  chatMessages:[
+    {id:"m100",role:"ai",text:"Good morning! **Burger Republic** is running well across all 12 locations today. You have **4 open tasks** — Store #7 needs a corrective action follow-up after last week's brand audit, and Store #3 just filed a slip-and-fall incident report. System-wide food safety compliance is at **96%** and trending up. Brand audit average is **89%**, up 3 points this quarter.",widgets:[{type:"taskList"}],chips:["View brand audits","Incident details","Food safety trend","Inventory status"]},
+  ],
+};
 
 /* ═══ BUILDER DATA ═══ */
 const NODE_TYPES=[
