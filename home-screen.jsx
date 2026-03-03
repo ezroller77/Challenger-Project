@@ -2521,8 +2521,7 @@ const PERSONA_DESCS={
 function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setFocusGoalName}){
   const[messages,setMessages]=useState([
     {id:"ai-pre-1",role:"ai",parts:[
-      {type:"text",content:"Hey! I'm your setup assistant. I'll help get your workspace configured in about a minute."},
-      {type:"text",content:"First \u2014 what's your name and company?"},
+      {type:"text",content:"Hey! What's your name and company?"},
     ]},
     {id:"u-pre-1",role:"user",text:"Michael, RC Marine Ops"},
     {id:"card-pre",role:"company-card",name:"Michael",company:"RC Marine Ops",website:"rcmarineops.com",logo:"/RCMarineLogo.png"},
@@ -2850,21 +2849,15 @@ function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setF
               </div>;
             }
             if(msg.role==="company-card"){
-              return<div key={msg.id} style={{animation:"fadeInUp 0.4s cubic-bezier(0.4,0,0.2,1)",maxWidth:380,width:"100%",alignSelf:"center"}}>
-                <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:20,padding:"22px 22px 18px",boxShadow:"0 4px 24px rgba(28,25,23,0.08), 0 1px 4px rgba(28,25,23,0.04)",overflow:"hidden",position:"relative"}}>
-                  <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:`linear-gradient(90deg, ${T.accent}, ${T.green})`}}/>
-                  <div style={{display:"flex",alignItems:"center",gap:16,marginTop:4}}>
-                    <img src={msg.logo} alt={msg.company} style={{width:52,height:52,borderRadius:14,objectFit:"cover",border:`1px solid ${T.border}`,flexShrink:0}}/>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:11,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:3}}>Company found</div>
-                      <div style={{fontSize:16,fontWeight:600,letterSpacing:"-0.02em",fontFamily:T.serif}}>{msg.company}</div>
-                      <div style={{fontSize:11.5,color:T.textTertiary,fontFamily:T.mono,marginTop:2}}>{msg.website}</div>
-                    </div>
+              return<div key={msg.id} style={{animation:"fadeInUp 0.4s cubic-bezier(0.4,0,0.2,1)",maxWidth:420,width:"100%",alignSelf:"center"}}>
+                <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:16,padding:"10px 14px",boxShadow:"0 2px 12px rgba(28,25,23,0.06), 0 1px 3px rgba(28,25,23,0.04)",overflow:"hidden",position:"relative",display:"flex",alignItems:"center",gap:12}}>
+                  <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:`linear-gradient(90deg, ${T.accent}, ${T.green})`}}/>
+                  <img src={msg.logo} alt={msg.company} style={{width:36,height:36,borderRadius:10,objectFit:"cover",border:`1px solid ${T.border}`,flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:14,fontWeight:600,letterSpacing:"-0.02em",fontFamily:T.serif}}>{msg.company}</div>
+                    <div style={{fontSize:11,color:T.textTertiary,fontFamily:T.mono}}>{msg.website}</div>
                   </div>
-                  <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${T.borderSubtle}`,display:"flex",alignItems:"center",gap:8}}>
-                    <div style={{fontSize:14.5,fontWeight:500,letterSpacing:"-0.01em"}}>Hi, {msg.name}!</div>
-                    <div style={{fontSize:13,color:T.textTertiary}}>Welcome to Flows</div>
-                  </div>
+                  <div style={{flexShrink:0,fontSize:13,color:T.textSecondary,fontWeight:500}}>Hi, {msg.name}!</div>
                 </div>
               </div>;
             }
