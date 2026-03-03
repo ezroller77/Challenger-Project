@@ -872,13 +872,23 @@ const getConnectorById=(cId)=>{
 };
 
 /* ═══ APP AGENT INSIGHTS ═══ */
-/* Each app has a named AI agent that proactively surfaces insights */
+/* Each app has a named AI agent that proactively surfaces insights.
+   proactive: the co-pilot strip message — one urgent thing, first person, with a recommended action
+   metricFlag: index of the metric card to annotate with agent badge (0-based)
+   agentActions: things the agent has already done (shown in activity feed)
+*/
 const APP_AGENT_INSIGHTS={
   /* Manufacturing */
   "quality-mgmt":{
     agent:"Quality Agent",
     status:"active",
     lastRun:"12 min ago",
+    proactive:{message:"Line 3 first-pass yield dropped 4.2% last shift. I've traced it to the bearing replacement on Station 7 — want me to draft a corrective action?",action:"Review",actionType:"review"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Correlated defect spike with Station 7 bearing replacement",time:"11 min ago"},
+      {text:"Notified shift supervisor R. Patel about Line 3 hold",time:"18 min ago"},
+    ],
     insights:[
       {type:"alert",title:"Defect spike on Line 3",desc:"First-pass yield dropped 4.2% in the last shift. Root cause appears linked to the bearing replacement on Station 7.",severity:"high",time:"11 min ago"},
       {type:"trend",title:"Supplier quality improving",desc:"Incoming material rejection rate down 18% over 30 days. Top 3 suppliers all above 98% acceptance.",severity:"positive",time:"2 hrs ago"},
@@ -889,6 +899,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Safety Agent",
     status:"active",
     lastRun:"8 min ago",
+    proactive:{message:"Zone B has had 3 near-miss reports this week — that's double the monthly average. I'd recommend a safety walk-through today before it becomes an incident.",action:"Schedule",actionType:"schedule"},
+    metricFlag:1,
+    agentActions:[
+      {text:"Flagged Zone B near-miss cluster for review",time:"25 min ago"},
+      {text:"Sent LOTO-04 review reminder to EHS team",time:"1 hr ago"},
+    ],
     insights:[
       {type:"alert",title:"Near-miss cluster in Zone B",desc:"3 near-miss reports filed in Zone B this week — 2x the monthly average. Recommend a safety walk-through.",severity:"high",time:"25 min ago"},
       {type:"trend",title:"TRIR trending down",desc:"Total Recordable Incident Rate has decreased 22% quarter-over-quarter. EHS training completion correlates strongly.",severity:"positive",time:"1 hr ago"},
@@ -899,6 +915,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Maintenance Agent",
     status:"active",
     lastRun:"5 min ago",
+    proactive:{message:"CNC-07 spindle bearing is running 12°C above baseline. I'm estimating a 34% failure probability within 72 hours — should I create a work order?",action:"Create WO",actionType:"approve"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Detected temperature anomaly on CNC-07 spindle bearing",time:"5 min ago"},
+      {text:"Checked spare parts inventory — filter kits running low",time:"1 hr ago"},
+    ],
     insights:[
       {type:"alert",title:"Bearing temp anomaly — CNC-07",desc:"Temperature readings 12°C above baseline on CNC-07 spindle bearing. Failure probability: 34% within 72 hours.",severity:"high",time:"5 min ago"},
       {type:"trend",title:"PM compliance at 94%",desc:"Preventive maintenance completion rate improved from 87% to 94% over the last 60 days.",severity:"positive",time:"1 hr ago"},
@@ -909,6 +931,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Shift Agent",
     status:"active",
     lastRun:"18 min ago",
+    proactive:{message:"Overtime is at 112% of budget this week — night shift is driving it. I've identified 2 day-shift operators who could move to evening to rebalance. Want to see the plan?",action:"View Plan",actionType:"review"},
+    metricFlag:2,
+    agentActions:[
+      {text:"Analysed overtime spend by shift and flagged budget overrun",time:"18 min ago"},
+      {text:"Identified rebalancing opportunity across day/evening shifts",time:"45 min ago"},
+    ],
     insights:[
       {type:"alert",title:"Overtime trending above budget",desc:"Week-to-date overtime is at 112% of budget. Night shift is the primary driver.",severity:"high",time:"18 min ago"},
       {type:"trend",title:"Changeover time reduced",desc:"Average changeover time down 11 min (from 42 to 31 min) since new procedure was implemented.",severity:"positive",time:"3 hrs ago"},
@@ -919,6 +947,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Production Agent",
     status:"active",
     lastRun:"3 min ago",
+    proactive:{message:"Line 2 OEE is at 71% — well below the 85% target. Three unplanned stops in 4 hours. Availability is the bottleneck. Want me to pull the stop logs?",action:"Investigate",actionType:"investigate"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Identified availability as primary OEE constraint on Line 2",time:"3 min ago"},
+      {text:"Cross-referenced stop logs with maintenance schedule",time:"15 min ago"},
+    ],
     insights:[
       {type:"alert",title:"OEE below target on Line 2",desc:"Line 2 OEE at 71% vs 85% target. Availability is the constraint — 3 unplanned stops in the last 4 hours.",severity:"high",time:"3 min ago"},
       {type:"trend",title:"Throughput up 6% this week",desc:"Overall throughput increased 6% week-over-week. Line 1 and Line 4 are the top contributors.",severity:"positive",time:"1 hr ago"},
@@ -929,6 +963,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Inventory Agent",
     status:"active",
     lastRun:"22 min ago",
+    proactive:{message:"Aluminium billet stock hits safety threshold in 3 days, but supplier lead time is 5 days. I'd place the order today — want me to draft a PO?",action:"Draft PO",actionType:"approve"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Calculated stockout risk timeline for aluminium billets",time:"22 min ago"},
+      {text:"Found $2,800 freight savings by consolidating 5 SKU reorders",time:"2 hrs ago"},
+    ],
     insights:[
       {type:"alert",title:"Raw material stockout risk",desc:"Aluminium billet stock will fall below safety threshold in 3 days. Supplier lead time is 5 days.",severity:"high",time:"22 min ago"},
       {type:"trend",title:"WIP inventory declining",desc:"Work-in-progress value decreased 15% over 30 days, freeing $42k in working capital.",severity:"positive",time:"2 hrs ago"},
@@ -939,6 +979,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Training Agent",
     status:"active",
     lastRun:"45 min ago",
+    proactive:{message:"Three CNC operation certifications expire this week — M. Torres, K. Singh, and R. Patel. Thursday training slots are open. Should I book them in?",action:"Book Slots",actionType:"approve"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Identified 3 expiring certifications and matched to open slots",time:"45 min ago"},
+      {text:"Updated onboarding playbook with new time-to-proficiency data",time:"3 hrs ago"},
+    ],
     insights:[
       {type:"alert",title:"3 certifications expiring this week",desc:"CNC operation certs for M. Torres, K. Singh, and R. Patel expire within 7 days. Training slots available Thursday.",severity:"high",time:"45 min ago"},
       {type:"trend",title:"Onboarding time reduced",desc:"Average time-to-proficiency for new operators down from 18 to 14 days since updated training modules.",severity:"positive",time:"3 hrs ago"},
@@ -950,6 +996,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Food Safety Agent",
     status:"active",
     lastRun:"6 min ago",
+    proactive:{message:"Walk-in Unit 2 hit 42°F at 6:15am — above the 40°F threshold. It recovered by 6:28am but I'd investigate the compressor. Want me to log a maintenance ticket?",action:"Log Ticket",actionType:"approve"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Detected temp excursion on Walk-in Unit 2 and verified recovery",time:"6 min ago"},
+      {text:"Correlated audit score improvement with opening checklist compliance",time:"1 hr ago"},
+    ],
     insights:[
       {type:"alert",title:"Walk-in cooler temp variance",desc:"Unit 2 walk-in recorded 42°F at 6:15am — above the 40°F threshold. Returned to range by 6:28am but needs investigation.",severity:"high",time:"6 min ago"},
       {type:"trend",title:"Audit scores improving",desc:"Rolling 30-day food safety audit score is 96.2, up from 93.1 last month. Opening checklist compliance is the key driver.",severity:"positive",time:"1 hr ago"},
@@ -960,6 +1012,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Shift Agent",
     status:"active",
     lastRun:"14 min ago",
+    proactive:{message:"Lunch rush drive-thru hit 4:12 average — well over the 3:30 target. Station 2 was the bottleneck. I'd move one crew member from counter to support. Want me to flag it for the shift lead?",action:"Flag Lead",actionType:"review"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Identified Station 2 as drive-thru bottleneck during lunch",time:"14 min ago"},
+      {text:"Analysed last 4 Fridays and found 22% volume gap vs staffing",time:"2 hrs ago"},
+    ],
     insights:[
       {type:"alert",title:"Drive-thru speed above target",desc:"Average service time hit 4:12 during lunch rush vs 3:30 target. Station 2 bottleneck identified.",severity:"high",time:"14 min ago"},
       {type:"trend",title:"Order accuracy at 98.4%",desc:"Accuracy rate up 1.2% since new line check procedure was introduced 3 weeks ago.",severity:"positive",time:"2 hrs ago"},
@@ -970,6 +1028,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Inventory Agent",
     status:"active",
     lastRun:"30 min ago",
+    proactive:{message:"Yesterday's waste hit 4.8% of food cost — well above the 3.5% target. Fry station discards are the main driver. Cutting batch sizes 20% during off-peak could fix it. Want the details?",action:"View Details",actionType:"review"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Traced waste spike to fry station batch sizing during off-peak",time:"30 min ago"},
+      {text:"Calculated theoretical vs actual food cost gap improvement",time:"2 hrs ago"},
+    ],
     insights:[
       {type:"alert",title:"Waste above threshold",desc:"Yesterday's waste was 4.8% of food cost vs 3.5% target. Fry station discards were the main contributor.",severity:"high",time:"30 min ago"},
       {type:"trend",title:"Food cost trending down",desc:"Theoretical vs actual food cost gap narrowed from 2.1% to 1.4% over 30 days.",severity:"positive",time:"2 hrs ago"},
@@ -980,6 +1044,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Training Agent",
     status:"active",
     lastRun:"1 hr ago",
+    proactive:{message:"J. Martinez is behind on training — 2 of 6 modules done by day 5 (target is 4). I can assign catch-up modules for this afternoon. Should I?",action:"Assign",actionType:"approve"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Flagged J. Martinez training gap against day-5 milestone",time:"1 hr ago"},
+      {text:"Compiled list of 8 crew needing food safety refresher",time:"3 hrs ago"},
+    ],
     insights:[
       {type:"alert",title:"New hire behind on training",desc:"J. Martinez (started 5 days ago) has only completed 2 of 6 required modules. Target is 4 by day 5.",severity:"high",time:"1 hr ago"},
       {type:"trend",title:"Retention improving",desc:"90-day retention rate up to 78% from 64% since structured onboarding was introduced.",severity:"positive",time:"3 hrs ago"},
@@ -990,6 +1060,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Delivery Agent",
     status:"active",
     lastRun:"10 min ago",
+    proactive:{message:"DoorDash error rate spiked to 6.2% today — packaging label mismatches are the cause. I'd add a label verification step to the handoff checklist. Want me to update the workflow?",action:"Update",actionType:"approve"},
+    metricFlag:1,
+    agentActions:[
+      {text:"Root-caused DoorDash errors to packaging label mismatches",time:"10 min ago"},
+      {text:"Identified Uber Eats now at 42% of delivery volume",time:"2 hrs ago"},
+    ],
     insights:[
       {type:"alert",title:"DoorDash error rate spiking",desc:"Order error rate for DoorDash jumped to 6.2% today vs 2.8% average. Packaging label mismatches are the cause.",severity:"high",time:"10 min ago"},
       {type:"trend",title:"Delivery volume up 14%",desc:"Third-party delivery orders are up 14% month-over-month. Uber Eats now accounts for 42% of delivery volume.",severity:"positive",time:"2 hrs ago"},
@@ -1000,6 +1076,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Restaurant Agent",
     status:"active",
     lastRun:"8 min ago",
+    proactive:{message:"Kitchen ticket time hit 6:24 during lunch — grill station backed up with 2 orders. I'd enable order throttling when the queue exceeds 8 tickets. Want to turn it on?",action:"Enable",actionType:"approve"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Identified grill station as lunch rush bottleneck",time:"8 min ago"},
+      {text:"Verified drive-thru positioning guide is improving cars/hour",time:"1 hr ago"},
+    ],
     insights:[
       {type:"alert",title:"Kitchen ticket time above 6 min",desc:"Average ticket time hit 6:24 during 12-1pm. Grill station was the bottleneck — 2 orders backed up.",severity:"high",time:"8 min ago"},
       {type:"trend",title:"Drive-thru cars per hour improving",desc:"Average cars/hour up from 28 to 31 over the last 2 weeks. New positioning guide is working.",severity:"positive",time:"1 hr ago"},
@@ -1011,6 +1093,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Fleet Agent",
     status:"active",
     lastRun:"4 min ago",
+    proactive:{message:"Unit 4472 flagged a soft brake pedal on pre-trip inspection. I'd take it out of service now — want me to reassign today's route to Unit 4481?",action:"Reassign",actionType:"approve"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Flagged Unit 4472 brake issue from pre-trip inspection",time:"4 min ago"},
+      {text:"Identified 6 units approaching tyre tread minimum",time:"2 hrs ago"},
+    ],
     insights:[
       {type:"alert",title:"Unit 4472 brake inspection overdue",desc:"Pre-trip inspection flagged soft brake pedal. Vehicle should be taken out of service for inspection.",severity:"high",time:"4 min ago"},
       {type:"trend",title:"Fleet uptime at 96.2%",desc:"Vehicle uptime improved from 93.8% to 96.2% since predictive maintenance was enabled.",severity:"positive",time:"1 hr ago"},
@@ -1021,6 +1109,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Dock Agent",
     status:"active",
     lastRun:"15 min ago",
+    proactive:{message:"Dock 3 trailer has been sitting for 4.2 hours — 2.5x average. The driver's past their window. I'd bump them to the priority queue. Should I?",action:"Prioritise",actionType:"approve"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Flagged excessive dwell time on Dock 3 trailer",time:"15 min ago"},
+      {text:"Calculated throughput improvement from staggered appointments",time:"3 hrs ago"},
+    ],
     insights:[
       {type:"alert",title:"Dock 3 dwell time at 4.2 hrs",desc:"Trailer at Dock 3 has been waiting 4.2 hours — 2.5x the average. Driver is past their appointment window.",severity:"high",time:"15 min ago"},
       {type:"trend",title:"Throughput up 8% this week",desc:"Loads processed per door increased from 12.4 to 13.4 daily average.",severity:"positive",time:"2 hrs ago"},
@@ -1031,6 +1125,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Delivery Agent",
     status:"active",
     lastRun:"7 min ago",
+    proactive:{message:"Three shipments are at risk of missing their delivery windows — weather delay on I-95. I'd send proactive ETA updates to the customers now before they escalate. Want me to send them?",action:"Send Updates",actionType:"approve"},
+    metricFlag:2,
+    agentActions:[
+      {text:"Detected I-95 weather delay affecting 3 shipments",time:"7 min ago"},
+      {text:"Drafted proactive customer ETA update notifications",time:"12 min ago"},
+    ],
     insights:[
       {type:"alert",title:"3 shipments with ETA risk",desc:"Orders #4891, #4903, #4912 are projected to miss delivery windows. Weather delay on I-95 corridor.",severity:"high",time:"7 min ago"},
       {type:"trend",title:"On-time delivery at 94.6%",desc:"OTD rate improved 1.8% month-over-month. POD capture compliance is now at 99.1%.",severity:"positive",time:"1 hr ago"},
@@ -1041,6 +1141,12 @@ const APP_AGENT_INSIGHTS={
     agent:"Route Agent",
     status:"active",
     lastRun:"20 min ago",
+    proactive:{message:"Empty miles hit 18.3% this week — NE corridor is the problem. Consolidating 3 partial loads into 2 full ones would save ~$1,200/week. Want me to model the new routes?",action:"Model Routes",actionType:"review"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Identified NE corridor as primary deadhead driver",time:"20 min ago"},
+      {text:"Modelled load consolidation savings for 3 routes",time:"1 hr ago"},
+    ],
     insights:[
       {type:"alert",title:"Deadhead ratio above 18%",desc:"Empty miles hit 18.3% this week vs 14% target. Northeast corridor is the main driver.",severity:"high",time:"20 min ago"},
       {type:"trend",title:"Cube utilisation improving",desc:"Average trailer cube utilisation up from 76% to 82% since load planning optimisation was enabled.",severity:"positive",time:"2 hrs ago"},
@@ -1051,11 +1157,279 @@ const APP_AGENT_INSIGHTS={
     agent:"Warehouse Agent",
     status:"active",
     lastRun:"35 min ago",
+    proactive:{message:"Pick accuracy is at 97.8% — below the 99.5% target. Zone C accounts for 60% of errors due to mislabelled bins. I can generate a re-slotting plan. Want to see it?",action:"View Plan",actionType:"review"},
+    metricFlag:0,
+    agentActions:[
+      {text:"Traced pick errors to mislabelled bins in Zone C",time:"35 min ago"},
+      {text:"Calculated 20% pick time reduction from re-slotting high-velocity SKUs",time:"2 hrs ago"},
+    ],
     insights:[
       {type:"alert",title:"Pick accuracy below target",desc:"Pick accuracy at 97.8% vs 99.5% target. Zone C is responsible for 60% of errors — mislabelled bins.",severity:"high",time:"35 min ago"},
       {type:"trend",title:"Order cycle time reduced",desc:"Average order cycle time decreased from 2.4 hrs to 1.9 hrs over 30 days.",severity:"positive",time:"2 hrs ago"},
       {type:"recommendation",title:"Re-slot Zone C bins",desc:"High-velocity SKUs in Zone C are in suboptimal positions. Re-slotting could reduce pick time by ~20%.",severity:"medium",time:"4 hrs ago"},
     ],
+  },
+};
+
+/* ═══ AGENT PREPARED ACTIONS ═══ */
+/* What the agent shows when you click the primary action button — the work it's already done */
+const APP_AGENT_PREPARED={
+  "quality-mgmt":{
+    title:"Corrective Action Draft — Line 3 Defect Spike",
+    fields:[
+      {label:"Issue",value:"First-pass yield drop of 4.2% on Line 3, last shift"},
+      {label:"Root Cause",value:"Bearing replacement on Station 7 — new bearing slightly out of spec (0.03mm variance)"},
+      {label:"Corrective Action",value:"Recalibrate Station 7 bearing mount. Re-inspect last 200 units from affected batch."},
+      {label:"Assigned To",value:"R. Patel, Quality Lead"},
+      {label:"Due",value:"Today, end of shift"},
+    ],
+  },
+  "safety-compliance":{
+    title:"Safety Walk-Through — Zone B",
+    fields:[
+      {label:"Trigger",value:"3 near-miss reports in Zone B this week (2x monthly average)"},
+      {label:"Focus Areas",value:"Forklift traffic patterns, floor markings visibility, PPE compliance"},
+      {label:"Proposed Time",value:"Today 2:00 PM (shift overlap for max coverage)"},
+      {label:"Lead",value:"EHS Coordinator"},
+      {label:"Follow-up",value:"Report findings by EOD, escalate if physical hazard found"},
+    ],
+  },
+  "mfg-maintenance":{
+    title:"Work Order — CNC-07 Spindle Bearing",
+    fields:[
+      {label:"Asset",value:"CNC-07 Spindle Bearing"},
+      {label:"Issue",value:"Temperature 12°C above baseline. Estimated 34% failure probability within 72 hrs"},
+      {label:"Priority",value:"High — schedule during next planned downtime"},
+      {label:"Parts Required",value:"Spindle bearing kit SKU-4472 (2 in stock)"},
+      {label:"Est. Downtime",value:"2.5 hours"},
+    ],
+  },
+  "mfg-shift-mgmt":{
+    title:"Crew Rebalancing Plan",
+    fields:[
+      {label:"Problem",value:"Night shift overtime at 112% of budget"},
+      {label:"Proposal",value:"Move 2 operators from day shift (overstaffed) to evening shift (understaffed)"},
+      {label:"Operators",value:"J. Kim (CNC certified) and M. Torres (multi-station qualified)"},
+      {label:"Impact",value:"Estimated $4,200/week overtime reduction"},
+      {label:"Effective",value:"Next schedule cycle (Monday)"},
+    ],
+  },
+  "production-ops":{
+    title:"Line 2 Stop Log Analysis",
+    fields:[
+      {label:"Current OEE",value:"71% (target: 85%)"},
+      {label:"Constraint",value:"Availability — 3 unplanned stops in 4 hours"},
+      {label:"Stop 1",value:"09:14 — Material feed jam (12 min)"},
+      {label:"Stop 2",value:"10:42 — Sensor false alarm (8 min)"},
+      {label:"Stop 3",value:"11:58 — Tooling changeover delay (22 min)"},
+    ],
+  },
+  "mfg-inventory-mgmt":{
+    title:"Purchase Order Draft — Aluminium Billets",
+    fields:[
+      {label:"Item",value:"Aluminium Billet 6061-T6, 150mm"},
+      {label:"Quantity",value:"500 units (2-week supply + safety buffer)"},
+      {label:"Supplier",value:"MetalCorp Inc. — preferred vendor"},
+      {label:"Unit Cost",value:"$42.50 (last PO price)"},
+      {label:"Delivery",value:"5 business days — arrival before stockout if ordered today"},
+    ],
+  },
+  "mfg-training-ops":{
+    title:"Training Slot Booking — CNC Certification",
+    fields:[
+      {label:"Trainees",value:"M. Torres, K. Singh, R. Patel"},
+      {label:"Certification",value:"CNC Operation Level 2 (expiring in 7 days)"},
+      {label:"Slot",value:"Thursday 9:00 AM — 12:00 PM, Training Room B"},
+      {label:"Instructor",value:"A. Chen (certified trainer, available)"},
+      {label:"Coverage",value:"Backfill arranged for all 3 stations"},
+    ],
+  },
+  "food-safety":{
+    title:"Maintenance Ticket — Walk-in Unit 2 Compressor",
+    fields:[
+      {label:"Equipment",value:"Walk-in Cooler Unit 2, Compressor"},
+      {label:"Issue",value:"Temp excursion to 42°F at 6:15am (threshold: 40°F). Self-recovered by 6:28am."},
+      {label:"Urgency",value:"Medium — functioning but at risk of repeat excursion"},
+      {label:"Recommended",value:"Inspect compressor relay and condenser coils"},
+      {label:"Scheduling",value:"Before tonight's closing — next excursion could spoil inventory"},
+    ],
+  },
+  "qsr-shift-mgmt":{
+    title:"Shift Lead Alert — Drive-Thru Bottleneck",
+    fields:[
+      {label:"Issue",value:"4:12 avg service time during lunch (target: 3:30)"},
+      {label:"Bottleneck",value:"Station 2 — order assembly falling behind"},
+      {label:"Recommendation",value:"Move 1 crew from counter to Station 2 support during 11:30-1:30"},
+      {label:"Expected Impact",value:"~25 second reduction in avg service time"},
+      {label:"Notify",value:"Shift Lead on duty"},
+    ],
+  },
+  "qsr-inventory-mgmt":{
+    title:"Batch Size Adjustment — Fry Station",
+    fields:[
+      {label:"Problem",value:"4.8% food waste vs 3.5% target. Fry station is primary driver."},
+      {label:"Root Cause",value:"Full batch cooked during off-peak (2-5pm) when demand is 40% lower"},
+      {label:"Proposal",value:"Reduce batch size by 20% during 2-5pm window"},
+      {label:"Projected Savings",value:"~35% reduction in fry waste ($180/week)"},
+      {label:"Risk",value:"Low — batch can be increased if unexpected rush occurs"},
+    ],
+  },
+  "qsr-training-ops":{
+    title:"Catch-Up Modules — J. Martinez",
+    fields:[
+      {label:"Trainee",value:"J. Martinez (Day 5 of onboarding)"},
+      {label:"Current Progress",value:"2 of 6 modules complete (target: 4 by day 5)"},
+      {label:"Assigned Modules",value:"Module 3: POS System, Module 4: Food Safety Basics"},
+      {label:"Schedule",value:"This afternoon, 2:00-4:30 PM (quiet period)"},
+      {label:"Buddy",value:"S. Park (assigned mentor, on shift)"},
+    ],
+  },
+  "delivery-ops":{
+    title:"Workflow Update — Delivery Label Verification",
+    fields:[
+      {label:"Problem",value:"DoorDash error rate at 6.2% (avg: 2.8%) — label mismatches"},
+      {label:"Change",value:"Add label scan verification step before driver handoff"},
+      {label:"Workflow",value:"Order Handoff Checklist → new step after item 3"},
+      {label:"Estimated Impact",value:"~70% reduction in label mismatch errors"},
+      {label:"Rollout",value:"Immediate — all shifts"},
+    ],
+  },
+  "restaurant-ops":{
+    title:"Order Throttling Configuration",
+    fields:[
+      {label:"Trigger",value:"Kitchen queue exceeds 8 active tickets"},
+      {label:"Action",value:"Pause new delivery orders for 5 min, display 'busy' to delivery apps"},
+      {label:"Dine-in/Drive-thru",value:"Unaffected — priority maintained"},
+      {label:"Auto-resume",value:"When queue drops below 5 tickets"},
+      {label:"Expected Impact",value:"Prevent quality drops during peak without losing dine-in throughput"},
+    ],
+  },
+  "fleet-ops":{
+    title:"Route Reassignment — Unit 4472 → Unit 4481",
+    fields:[
+      {label:"Issue",value:"Unit 4472 — soft brake pedal flagged on pre-trip"},
+      {label:"Action",value:"Pull Unit 4472 from service, assign today's route to Unit 4481"},
+      {label:"Route",value:"NE-14 (Chicago → Detroit, 4 stops)"},
+      {label:"Unit 4481 Status",value:"Available, pre-trip passed, fuelled"},
+      {label:"Driver",value:"D. Wilson — notified, pickup at Bay 6"},
+    ],
+  },
+  "dock-ops":{
+    title:"Priority Queue — Dock 3 Trailer",
+    fields:[
+      {label:"Trailer",value:"TRL-8842 at Dock 3"},
+      {label:"Current Dwell",value:"4.2 hours (avg: 1.7 hours)"},
+      {label:"Driver Status",value:"Past appointment window, at risk of HOS violation"},
+      {label:"Action",value:"Move to priority unload queue — next available door"},
+      {label:"Estimated Clear",value:"45 minutes from now"},
+    ],
+  },
+  "delivery-tracking":{
+    title:"Customer ETA Notifications",
+    fields:[
+      {label:"Affected Orders",value:"#4891 (Acme Corp), #4903 (BuildCo), #4912 (MegaRetail)"},
+      {label:"Cause",value:"Weather delay on I-95 corridor — est. 2-3 hour impact"},
+      {label:"New ETAs",value:"#4891: +2hrs, #4903: +3hrs, #4912: +2.5hrs"},
+      {label:"Message",value:"Proactive delay notification with revised window and apology"},
+      {label:"Channel",value:"Email + SMS to primary contact"},
+    ],
+  },
+  "route-ops":{
+    title:"Route Consolidation Model — NE Corridor",
+    fields:[
+      {label:"Current",value:"3 partial loads (avg 54% utilisation) on NE corridor"},
+      {label:"Proposed",value:"Consolidate into 2 full loads (avg 82% utilisation)"},
+      {label:"Routes Affected",value:"NE-07, NE-12, NE-14"},
+      {label:"Fuel Savings",value:"~$1,200/week"},
+      {label:"Trade-off",value:"1 delivery shifted by +4hrs (customer pre-notified)"},
+    ],
+  },
+  "tl-inventory-mgmt":{
+    title:"Zone C Re-Slotting Plan",
+    fields:[
+      {label:"Problem",value:"60% of pick errors from Zone C — mislabelled bins"},
+      {label:"Phase 1",value:"Re-label all bins in Zone C aisles 4-7 (2 hrs, 1 person)"},
+      {label:"Phase 2",value:"Move top 20 high-velocity SKUs to eye-level slots"},
+      {label:"Expected Impact",value:"~20% reduction in pick time, error rate back to target"},
+      {label:"Schedule",value:"This weekend during low-volume window"},
+    ],
+  },
+};
+
+/* ═══ AGENT CONFIG (per-app agent.md) ═══ */
+/* Default instructions and data sources for each app's agent — editable by the user */
+const APP_AGENT_CONFIG={
+  "quality-mgmt":{
+    instructions:"You are the Quality Agent for this manufacturing operation.\n\nFocus areas:\n- Monitor first-pass yield across all production lines\n- Track supplier quality metrics and incoming material rejection rates\n- Flag when any line goes 14+ days without a quality audit\n- Correlate defect spikes with recent equipment changes or maintenance\n\nBehaviour:\n- Always identify root cause before recommending action\n- Prioritise alerts that could impact customer shipments\n- Draft corrective actions in CAPA format\n- Use data from the last 30 days for trend analysis",
+    dataSources:["Quality NCR Register","MES Production Data","Supplier Scorecard","Equipment Maintenance Log"],
+  },
+  "safety-compliance":{
+    instructions:"You are the Safety Agent for this facility.\n\nFocus areas:\n- Monitor near-miss and incident report frequency by zone\n- Track TRIR and leading indicators (training completion, audit scores)\n- Flag when safety procedures are overdue for review\n- Identify clusters and patterns in incident data\n\nBehaviour:\n- Prioritise life-safety risks above all else\n- Recommend walk-throughs when near-miss clusters emerge\n- Never delay alerting on high-severity findings\n- Reference regulatory requirements when relevant",
+    dataSources:["Risk Register","Incident Reports","Training Records","EHS Audit Data"],
+  },
+  "mfg-maintenance":{
+    instructions:"You are the Maintenance Agent for this plant.\n\nFocus areas:\n- Monitor equipment sensor data for anomalies (temperature, vibration, pressure)\n- Track preventive maintenance completion rates\n- Predict failure probability using historical patterns\n- Monitor spare parts inventory levels against lead times\n\nBehaviour:\n- Alert immediately when failure probability exceeds 25%\n- Always include estimated downtime in work order drafts\n- Check parts availability before recommending repairs\n- Prioritise based on production impact",
+    dataSources:["Asset Register","IoT Sensor Feed","PM Schedule","Spare Parts Inventory"],
+  },
+  "mfg-shift-mgmt":{
+    instructions:"You are the Shift Agent for manufacturing operations.\n\nFocus areas:\n- Monitor overtime spend against budget by shift\n- Track changeover times and identify improvement opportunities\n- Analyse staffing levels vs demand patterns\n- Flag scheduling conflicts and coverage gaps\n\nBehaviour:\n- Propose crew rebalancing when overtime exceeds 105% of budget\n- Identify qualified operators for reassignment (check certifications)\n- Consider employee preferences when suggesting moves\n- Always model financial impact of recommendations",
+    dataSources:["Shift Schedule","Overtime Reports","Operator Certifications","Production Demand Forecast"],
+  },
+  "production-ops":{
+    instructions:"You are the Production Agent for this facility.\n\nFocus areas:\n- Monitor OEE (Availability × Performance × Quality) per line\n- Identify which OEE component is the constraint\n- Track throughput trends and compare across lines\n- Analyse stop logs for patterns\n\nBehaviour:\n- Alert when any line drops below OEE target for 2+ hours\n- Always identify the constraint (availability, performance, or quality)\n- Cross-reference stops with maintenance and changeover schedules\n- Suggest scheduling optimisations backed by data",
+    dataSources:["MES Production Data","Stop Log","Changeover Records","Schedule Optimiser"],
+  },
+  "mfg-inventory-mgmt":{
+    instructions:"You are the Inventory Agent for manufacturing.\n\nFocus areas:\n- Monitor raw material stock levels against safety thresholds\n- Track WIP inventory value and flow\n- Identify reorder timing based on usage rates and lead times\n- Find cost savings through order consolidation\n\nBehaviour:\n- Alert when stock will hit threshold before reorder arrives\n- Always factor in supplier lead times\n- Draft POs with preferred vendor pricing\n- Highlight working capital improvements",
+    dataSources:["Raw Material Inventory","WIP Tracking","Supplier Catalog","Purchase Order History"],
+  },
+  "mfg-training-ops":{
+    instructions:"You are the Training Agent for manufacturing.\n\nFocus areas:\n- Track certification expiry dates and renewal windows\n- Monitor onboarding progress against milestones\n- Identify single-operator dependencies on critical stations\n- Match training needs with available slots and instructors\n\nBehaviour:\n- Alert 7 days before any certification expires\n- Proactively match expiring certs with available training slots\n- Recommend cross-training to reduce single-point-of-failure risk\n- Track time-to-proficiency as a key metric",
+    dataSources:["Operator Certifications","Training Schedule","Onboarding Tracker","Station Coverage Matrix"],
+  },
+  "food-safety":{
+    instructions:"You are the Food Safety Agent for this restaurant.\n\nFocus areas:\n- Monitor temperature logs for all cold storage units\n- Track food safety audit scores and compliance trends\n- Flag temp excursions immediately, even if self-recovered\n- Identify high-risk time windows from historical data\n\nBehaviour:\n- Never delay alerting on temperature threshold breaches\n- Recommend preventive checks during high-risk windows\n- Correlate equipment issues with temp excursion patterns\n- Track audit score drivers to reinforce what's working",
+    dataSources:["Temperature Sensors","Food Safety Audits","Equipment Maintenance","Checklist Completion Logs"],
+  },
+  "qsr-shift-mgmt":{
+    instructions:"You are the Shift Agent for this QSR operation.\n\nFocus areas:\n- Monitor drive-thru and counter service times against targets\n- Identify bottleneck stations during peak periods\n- Analyse staffing levels vs historical volume patterns\n- Track order accuracy rates\n\nBehaviour:\n- Alert when service time exceeds target for 15+ minutes\n- Suggest crew repositioning during peak, not just after\n- Use 4-week rolling data for staffing recommendations\n- Balance speed with order accuracy",
+    dataSources:["POS Transaction Data","Drive-Thru Timer","Labour Schedule","Order Accuracy Logs"],
+  },
+  "qsr-inventory-mgmt":{
+    instructions:"You are the Inventory Agent for this restaurant.\n\nFocus areas:\n- Track food waste percentage against target daily\n- Monitor theoretical vs actual food cost\n- Identify waste drivers by station and time of day\n- Optimise batch sizes based on demand patterns\n\nBehaviour:\n- Alert when waste exceeds target by 1%+\n- Always identify the specific station and root cause\n- Propose changes with projected savings\n- Consider speed-of-service impact of any changes",
+    dataSources:["Waste Tracking","Food Cost Reports","POS Sales Data","Batch Records"],
+  },
+  "qsr-training-ops":{
+    instructions:"You are the Training Agent for this QSR operation.\n\nFocus areas:\n- Track new hire onboarding progress against day-by-day milestones\n- Monitor 90-day retention rates\n- Flag when trainees fall behind schedule\n- Manage food safety refresher compliance\n\nBehaviour:\n- Alert when any trainee is 1+ modules behind milestone\n- Suggest catch-up plans during quiet periods\n- Pair behind-schedule trainees with available mentors\n- Track which modules have highest drop-off rates",
+    dataSources:["Onboarding Tracker","Training Modules","Retention Data","Mentor Assignments"],
+  },
+  "delivery-ops":{
+    instructions:"You are the Delivery Agent for third-party delivery operations.\n\nFocus areas:\n- Monitor order error rates by delivery platform\n- Track delivery volume trends across partners\n- Identify root causes of packaging and handoff errors\n- Optimise the driver handoff process\n\nBehaviour:\n- Alert when any platform's error rate exceeds 2x average\n- Root-cause errors to specific process steps\n- Propose workflow changes with implementation ease in mind\n- Track volume shifts across platforms for capacity planning",
+    dataSources:["Delivery Platform APIs","Order Error Logs","Handoff Checklist Data","Volume Reports"],
+  },
+  "restaurant-ops":{
+    instructions:"You are the Restaurant Agent for this QSR operation.\n\nFocus areas:\n- Monitor kitchen ticket times and identify bottleneck stations\n- Track drive-thru throughput (cars per hour)\n- Balance dine-in, drive-thru, and delivery channel capacity\n- Manage order throttling for quality protection\n\nBehaviour:\n- Alert when ticket time exceeds target for 10+ minutes\n- Identify the specific station causing delays\n- Protect dine-in/drive-thru quality when delivery volume spikes\n- Auto-suggest throttling thresholds based on kitchen capacity",
+    dataSources:["Kitchen Display System","Drive-Thru Sensors","Delivery Platform Queue","POS Data"],
+  },
+  "fleet-ops":{
+    instructions:"You are the Fleet Agent for this transport operation.\n\nFocus areas:\n- Monitor pre-trip inspection results for safety flags\n- Track fleet uptime and predictive maintenance signals\n- Manage vehicle-to-route assignments for coverage\n- Monitor tyre, brake, and engine health metrics\n\nBehaviour:\n- Immediately flag any safety-critical inspection failure\n- Suggest route reassignment when pulling a vehicle, not just the pull\n- Verify replacement vehicle availability before recommending\n- Track uptime trends to validate predictive maintenance ROI",
+    dataSources:["Pre-Trip Inspection Data","Vehicle Telematics","Route Assignments","Maintenance Records"],
+  },
+  "dock-ops":{
+    instructions:"You are the Dock Agent for this facility.\n\nFocus areas:\n- Monitor trailer dwell times and appointment compliance\n- Track throughput per door (loads/day)\n- Identify scheduling patterns that create bunching\n- Flag drivers at risk of HOS violations\n\nBehaviour:\n- Alert when dwell time exceeds 2x average\n- Prioritise trailers with driver HOS concerns\n- Propose appointment schedule optimisations with data\n- Track throughput trends to validate changes",
+    dataSources:["Yard Management System","Appointment Schedule","Door Assignment Log","Driver HOS Data"],
+  },
+  "delivery-tracking":{
+    instructions:"You are the Delivery Agent for shipment tracking.\n\nFocus areas:\n- Monitor in-transit shipments for ETA risks\n- Track on-time delivery rates and trends\n- Identify weather, traffic, and infrastructure disruptions\n- Manage proactive customer communication\n\nBehaviour:\n- Alert when any shipment has >30% risk of missing window\n- Draft customer notifications before they need to ask\n- Group related delays for efficient communication\n- Track POD capture compliance as a quality signal",
+    dataSources:["TMS Tracking Data","Weather & Traffic APIs","Customer SLAs","POD Capture Logs"],
+  },
+  "route-ops":{
+    instructions:"You are the Route Agent for this transport operation.\n\nFocus areas:\n- Monitor deadhead (empty mile) ratio by corridor\n- Track trailer cube utilisation\n- Identify load consolidation opportunities\n- Optimise route sequencing for fuel efficiency\n\nBehaviour:\n- Alert when deadhead exceeds target by 3%+\n- Model consolidation scenarios with clear trade-offs\n- Always quantify fuel/cost savings in recommendations\n- Flag customer impact and propose mitigation",
+    dataSources:["Route Planning System","Load Manifests","Fuel Records","Customer Delivery Windows"],
+  },
+  "tl-inventory-mgmt":{
+    instructions:"You are the Warehouse Agent for this facility.\n\nFocus areas:\n- Monitor pick accuracy rates by zone\n- Track order cycle times and identify bottlenecks\n- Optimise bin slotting for high-velocity SKUs\n- Identify labelling and organisation issues\n\nBehaviour:\n- Alert when accuracy drops below target for any zone\n- Trace errors to specific root causes (labels, slotting, training)\n- Propose re-slotting plans with time/impact estimates\n- Schedule changes during low-volume windows",
+    dataSources:["WMS Pick Data","Inventory Master","Zone Layout","Error Logs"],
   },
 };
 
@@ -1158,6 +1532,7 @@ const APP_ACTIVITY_TYPES={
   escalation:{icon:"bolt",color:T.amber,label:"Escalation"},
   workflow:{icon:"workflow",color:T.highlight,label:"Workflow"},
   connector:{icon:"connector",color:T.violet,label:"Sync"},
+  agent:{icon:"sparkle",color:T.accent,label:"Agent"},
 };
 
 const APP_TABLE_MAP={
