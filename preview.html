@@ -447,6 +447,54 @@ const computeSignalAverages=(goalIds)=>{
   return avg;
 };
 
+/* Score trend data (12 months, for sparklines) */
+const SCORE_TREND_DATA={
+  manufacturing:[2.1,2.3,2.4,2.6,2.8,2.9,3.0,3.1,3.2,3.3,3.4,3.5],
+  qsr:[2.4,2.5,2.7,2.8,2.9,3.0,3.1,3.2,3.2,3.3,3.4,3.4],
+  "transport-logistics":[2.0,2.2,2.3,2.5,2.7,2.8,2.9,3.0,3.1,3.2,3.3,3.4],
+};
+
+/* ═══ GOAL SCORING: BENCHMARKS ═══ */
+const GOAL_BENCHMARKS={
+  manufacturing:{siteCount:8400,avgScore:3.1,top10:4.2,percentile:28,signalAvgs:{inspections:72,actions:65,training:74,incidents:55,assets:68,observations:60}},
+  qsr:{siteCount:12400,avgScore:3.0,top10:4.1,percentile:32,signalAvgs:{inspections:70,actions:62,training:72,incidents:52,assets:65,observations:58}},
+  "transport-logistics":{siteCount:5200,avgScore:2.9,top10:4.0,percentile:35,signalAvgs:{inspections:68,actions:60,training:70,incidents:50,assets:62,observations:55}},
+};
+
+/* ═══ GOAL SCORING: RECOMMENDATIONS ═══ */
+const GOAL_RECOMMENDATIONS={
+  manufacturing:[
+    {id:"rec-1",goalId:"mfg-downtime",action:"Complete overdue PM inspections on Line 3 compressor",impact:0.3,effort:"Low",signal:"assets",timeframe:"1 week"},
+    {id:"rec-2",goalId:"mfg-turnover",action:"Launch retention survey for night shift operators",impact:0.2,effort:"Medium",signal:"training",timeframe:"2 weeks"},
+    {id:"rec-3",goalId:"mfg-changeover",action:"Run SMED workshop for packaging line changeovers",impact:0.25,effort:"High",signal:"inspections",timeframe:"1 month"},
+    {id:"rec-4",goalId:"mfg-preventive-maintenance",action:"Digitise PM checklists for CNC machines",impact:0.15,effort:"Low",signal:"inspections",timeframe:"3 days"},
+    {id:"rec-5",goalId:"mfg-supply-resilience",action:"Qualify secondary supplier for critical raw material",impact:0.2,effort:"High",signal:"observations",timeframe:"6 weeks"},
+  ],
+  qsr:[
+    {id:"rec-1",goalId:"qsr-retention",action:"Implement 30-day new hire check-in programme",impact:0.35,effort:"Medium",signal:"training",timeframe:"2 weeks"},
+    {id:"rec-2",goalId:"qsr-waste",action:"Calibrate batch sizes to updated sales forecast model",impact:0.2,effort:"Low",signal:"inspections",timeframe:"3 days"},
+    {id:"rec-3",goalId:"qsr-labor-cost",action:"Deploy AI-assisted schedule builder for peak hours",impact:0.25,effort:"Medium",signal:"actions",timeframe:"2 weeks"},
+    {id:"rec-4",goalId:"qsr-food-safety",action:"Complete overdue temperature log training for 8 crew",impact:0.15,effort:"Low",signal:"training",timeframe:"1 week"},
+    {id:"rec-5",goalId:"qsr-delivery",action:"Set up automated quality checks for third-party orders",impact:0.2,effort:"Medium",signal:"inspections",timeframe:"2 weeks"},
+  ],
+  "transport-logistics":[
+    {id:"rec-1",goalId:"tl-driver-retention",action:"Launch driver satisfaction pulse survey across all depots",impact:0.3,effort:"Medium",signal:"training",timeframe:"2 weeks"},
+    {id:"rec-2",goalId:"tl-deadhead",action:"Enable backhaul matching for southbound corridors",impact:0.25,effort:"High",signal:"observations",timeframe:"1 month"},
+    {id:"rec-3",goalId:"tl-trailer-pool",action:"Rebalance trailer allocation based on seasonal demand",impact:0.2,effort:"Medium",signal:"assets",timeframe:"2 weeks"},
+    {id:"rec-4",goalId:"tl-dwell",action:"Implement dock appointment scheduling at top 5 facilities",impact:0.2,effort:"Medium",signal:"actions",timeframe:"3 weeks"},
+    {id:"rec-5",goalId:"tl-vehicle-uptime",action:"Complete overdue brake inspections on 12 flagged units",impact:0.15,effort:"Low",signal:"inspections",timeframe:"1 week"},
+  ],
+};
+
+/* ═══ GOAL SCORING: PER-SITE SCORES ═══ */
+const SITES_LIST=["HQ Portland","Plant Alpha","Plant Beta","Distribution Center"];
+const SITE_SCORES={
+  "HQ Portland":{score:3.8,trend:0.3},
+  "Plant Alpha":{score:3.2,trend:0.1},
+  "Plant Beta":{score:2.6,trend:-0.2},
+  "Distribution Center":{score:3.0,trend:0.0},
+};
+
 /* ═══ CONNECTOR MAP (goal → data sources) ═══ */
 const CONNECTOR_MAP={
   // Manufacturing
@@ -7192,9 +7240,72 @@ function QuickStatsWidget({mode,industry}){
   </div>;
 }
 
+/* ═══ WIDGET: GOAL SCORE ═══ */
+function GoalScoreWidget({mode,industry,selectedGoals}){
+  const agg=computeAggregateScore(selectedGoals||[]);
+  const allGoals=getGoalsByIndustry(industry);
+
+  /* Top 3 goals needing attention (lowest scores) */
+  const needsAttention=(selectedGoals||[])
+    .map(id=>{const g=allGoals.find(x=>x.id===id);const s=GOAL_SCORES[id];return g&&s?{...g,...s}:null;})
+    .filter(Boolean)
+    .sort((a,b)=>a.score-b.score)
+    .slice(0,3);
+
+  if(!selectedGoals||selectedGoals.length===0){
+    if(mode==="pinned") return<div>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+        <div style={{width:32,height:32,borderRadius:9,background:T.amberSoft,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.target(T.amber)}</div>
+        <div><div style={{fontSize:13,fontWeight:600,letterSpacing:"-0.01em"}}>Goal Score</div><div style={{fontSize:11,color:T.textTertiary,marginTop:1}}>No goals set</div></div>
+      </div>
+      <div style={{fontSize:12,color:T.textTertiary,textAlign:"center",padding:"16px 0"}}>Complete onboarding to set goals</div>
+    </div>;
+    return<div style={{fontSize:12,color:T.textTertiary,textAlign:"center",padding:16}}>No goals configured yet.</div>;
+  }
+
+  if(mode==="pinned") return<div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        <div style={{width:32,height:32,borderRadius:9,background:T.amberSoft,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.target(T.amber)}</div>
+        <div onClick={()=>{window.location.hash="#score";}} style={{cursor:"pointer"}}><div style={{fontSize:13,fontWeight:600,letterSpacing:"-0.01em"}}>Goal Score</div><div style={{fontSize:11,color:T.textTertiary,marginTop:1}}>{agg.count} goal{agg.count!==1?"s":""} tracked</div></div>
+      </div>
+      <div style={{display:"flex",alignItems:"baseline",gap:6}}>
+        <span style={{fontFamily:T.serif,fontSize:22,fontWeight:500,letterSpacing:"-0.03em"}}>{agg.score}</span>
+        {agg.trend!==0&&<span className="chip" style={{background:agg.trend>0?T.greenSoft:T.roseSoft,color:agg.trend>0?T.green:T.rose}}>{agg.trend>0?"↑":"↓"} {Math.abs(agg.trend)}</span>}
+      </div>
+    </div>
+    <div style={{marginBottom:12}}><StarRating score={agg.score} size={20} gap={2}/></div>
+    {needsAttention.length>0&&<div>
+      <div style={{fontSize:10,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.04em",marginBottom:8}}>Needs Attention</div>
+      {needsAttention.map((g,i)=><div key={g.id} onClick={()=>{window.location.hash="#score";}} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:i<needsAttention.length-1?`1px solid ${T.borderSubtle}`:"none",cursor:"pointer",borderRadius:4,transition:"background 0.15s"}} onMouseEnter={e=>e.currentTarget.style.background=T.surfaceHover} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+        <StarRating score={g.score} size={10} gap={1}/>
+        <span style={{flex:1,fontSize:12,letterSpacing:"-0.01em",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{g.name}</span>
+        <span style={{fontSize:11,fontFamily:T.mono,fontWeight:600,color:g.score<3?T.rose:T.amber}}>{g.score}</span>
+      </div>)}
+    </div>}
+  </div>;
+
+  /* Inline mode */
+  return<div>
+    <div className="lbl" style={{marginBottom:8,cursor:"pointer"}} onClick={()=>{window.location.hash="#score";}}>{IC.target(T.textTertiary)} Goal Score</div>
+    <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:10}}>
+      <span style={{fontFamily:T.serif,fontSize:28,fontWeight:500,letterSpacing:"-0.03em"}}>{agg.score}</span>
+      <span style={{fontSize:13,color:T.textTertiary}}>/5.0</span>
+      {agg.trend!==0&&<span className="chip" style={{background:agg.trend>0?T.greenSoft:T.roseSoft,color:agg.trend>0?T.green:T.rose}}>{agg.trend>0?"↑":"↓"} {Math.abs(agg.trend)}</span>}
+    </div>
+    <StarRating score={agg.score} size={18} gap={2}/>
+    {needsAttention.length>0&&<div style={{marginTop:10}}>
+      {needsAttention.map((g,i)=><div key={g.id} onClick={()=>{window.location.hash="#score";}} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 0",borderBottom:i<needsAttention.length-1?`1px solid ${T.borderSubtle}`:"none",cursor:"pointer",borderRadius:4,transition:"background 0.15s"}} onMouseEnter={e=>e.currentTarget.style.background=T.surfaceHover} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+        <span style={{fontSize:11,color:T.textSecondary,flex:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{g.name}</span>
+        <span style={{fontSize:10,fontFamily:T.mono,color:g.score<3?T.rose:T.amber}}>{g.score}</span>
+      </div>)}
+    </div>}
+  </div>;
+}
+
 /* ═══ WIDGET DISPATCHER ═══ */
-const WIDGET_MAP={taskList:TaskListWidget,velocity:VelocityWidget,completion:CompletionWidget,revenue:RevenueWidget,activity:ActivityWidget,quickStats:QuickStatsWidget};
-const WIDGET_LABELS={taskList:"Tasks",velocity:"Velocity",completion:"Completion",revenue:"Revenue",activity:"Activity",quickStats:"Stats"};
+const WIDGET_MAP={taskList:TaskListWidget,velocity:VelocityWidget,completion:CompletionWidget,revenue:RevenueWidget,activity:ActivityWidget,quickStats:QuickStatsWidget,goalScore:GoalScoreWidget};
+const WIDGET_LABELS={taskList:"Tasks",velocity:"Velocity",completion:"Completion",revenue:"Revenue",activity:"Activity",quickStats:"Stats",goalScore:"Goal Score"};
 
 function ChatWidget({widget,mode,isPinned,onPin,onUnpin,industry}){
   const Comp=WIDGET_MAP[widget.type];
@@ -7631,6 +7742,911 @@ function BrandIcon({brandLogoUrl,size=28}){
   return<RCLogo size={size}/>;
 }
 
+/* ═══ GOAL DASHBOARD ═══ */
+
+function GoalDashboard({industry,selectedGoals,onNavigate,onSelectGoal}){
+  const[lens,setLens]=useState("risk");
+  const[activeCategory,setActiveCategory]=useState("All");
+
+  const allGoals=getGoalsByIndustry(industry);
+  const ind=INDUSTRIES.find(i=>i.id===industry)||INDUSTRIES[0];
+  const agg=computeAggregateScore(selectedGoals);
+  const sigAvgs=computeSignalAverages(selectedGoals);
+  const trendData=SCORE_TREND_DATA[industry]||SCORE_TREND_DATA.manufacturing;
+  const recs=GOAL_RECOMMENDATIONS[industry]||[];
+
+  /* Goals with scores */
+  const scoredGoals=useMemo(()=>{
+    return allGoals.filter(g=>selectedGoals.includes(g.id)&&GOAL_SCORES[g.id]).map(g=>({
+      ...g,...GOAL_SCORES[g.id],
+    }));
+  },[allGoals,selectedGoals]);
+
+  /* Sorted by lens */
+  const sortedGoals=useMemo(()=>{
+    const copy=[...scoredGoals];
+    if(lens==="risk") copy.sort((a,b)=>a.score-b.score);
+    else copy.sort((a,b)=>(5-b.score)-(5-a.score));
+    return copy;
+  },[scoredGoals,lens]);
+
+  /* Categories */
+  const categories=useMemo(()=>{
+    const cats=new Set();
+    scoredGoals.forEach(g=>cats.add(g.category));
+    return["All",...Array.from(cats).sort()];
+  },[scoredGoals]);
+
+  const filtered=useMemo(()=>
+    activeCategory==="All"?sortedGoals:sortedGoals.filter(g=>g.category===activeCategory)
+  ,[sortedGoals,activeCategory]);
+
+  /* Category colour helpers */
+  const getCatColor=(cat)=>{
+    if(!cat)return T.accent;const l=cat.toLowerCase();
+    if(l.includes("quality"))return T.violet;if(l.includes("safety"))return T.rose;
+    if(l.includes("maintenance")||l.includes("reliability")||l.includes("fleet"))return T.amber;
+    if(l.includes("supply")||l.includes("inventory")||l.includes("warehouse"))return T.green;
+    if(l.includes("compliance")||l.includes("delivery")||l.includes("visibility"))return T.highlight;
+    if(l.includes("cost")||l.includes("revenue")||l.includes("profitability"))return T.amber;
+    if(l.includes("workforce")||l.includes("labor"))return T.violet;
+    if(l.includes("speed")||l.includes("experience"))return T.highlight;
+    if(l.includes("drive")||l.includes("digital"))return T.rose;
+    if(l.includes("production")||l.includes("throughput"))return T.green;
+    if(l.includes("route")||l.includes("optimization"))return T.violet;
+    if(l.includes("multi-unit")||l.includes("franchise"))return T.amber;
+    return T.accent;
+  };
+  const getCatSoft=(cat)=>{
+    const c=getCatColor(cat);
+    if(c===T.violet)return T.violetSoft;if(c===T.rose)return T.roseSoft;
+    if(c===T.amber)return T.amberSoft;if(c===T.green)return T.greenSoft;
+    if(c===T.highlight)return T.highlightSoft;return T.accentSoft;
+  };
+
+  /* Count goals needing attention (score < 3.0) */
+  const atRiskCount=scoredGoals.filter(g=>g.score<3.0).length;
+
+  /* Top signal: best performing */
+  const topSignal=useMemo(()=>{
+    const entries=Object.entries(sigAvgs);
+    if(entries.length===0)return null;
+    entries.sort((a,b)=>b[1]-a[1]);
+    const sig=GOAL_SIGNAL_TYPES.find(s=>s.id===entries[0][0]);
+    return sig?{...sig,value:entries[0][1]}:null;
+  },[sigAvgs]);
+
+  /* Weakest signal */
+  const weakSignal=useMemo(()=>{
+    const entries=Object.entries(sigAvgs);
+    if(entries.length===0)return null;
+    entries.sort((a,b)=>a[1]-b[1]);
+    const sig=GOAL_SIGNAL_TYPES.find(s=>s.id===entries[0][0]);
+    return sig?{...sig,value:entries[0][1]}:null;
+  },[sigAvgs]);
+
+  return<div style={{flex:1,overflowY:"auto"}}>
+    <style>{`
+      .gd-card{background:${T.surface};border:1px solid ${T.border};border-radius:${T.r}px;padding:18px 20px;cursor:pointer;transition:all 0.2s}
+      .gd-card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.05);border-color:${T.accentBorder};transform:translateY(-1px)}
+      .gd-tab{padding:6px 14px;border-radius:99px;font-size:11.5px;font-family:${T.sans};cursor:pointer;border:1px solid transparent;background:transparent;color:${T.textSecondary};transition:all 0.15s;white-space:nowrap;font-weight:500}
+      .gd-tab:hover{background:${T.surfaceHover};color:${T.text}}
+      .gd-tab.active{background:${T.accent};color:#fff;border-color:${T.accent};font-weight:600}
+    `}</style>
+
+    <div style={{maxWidth:960,margin:"0 auto",padding:"28px 24px 60px"}}>
+
+      {/* ── Hero Section ── */}
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:16,marginBottom:24,flexWrap:"wrap"}}>
+        <div>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <div style={{width:38,height:38,borderRadius:10,background:ind.colorSoft,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.target(ind.color,18)}</div>
+            <h1 style={{fontFamily:T.serif,fontSize:"clamp(22px,3vw,28px)",fontWeight:400,letterSpacing:"-0.03em",lineHeight:1.2}}>Goal Score</h1>
+          </div>
+          <p style={{fontSize:13,color:T.textSecondary,lineHeight:1.6,maxWidth:520}}>
+            {lens==="risk"
+              ?"Showing goals by risk — lowest scores first. Focus here to protect your baseline."
+              :"Showing goals by opportunity — biggest improvement potential first."}
+          </p>
+        </div>
+        <LensToggle lens={lens} setLens={setLens}/>
+      </div>
+
+      {/* ── Aggregate Score Card ── */}
+      <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:T.r+4,padding:"28px 32px",marginBottom:20,display:"flex",alignItems:"center",gap:32,flexWrap:"wrap"}}>
+        <div style={{flex:"0 0 auto"}}>
+          <ScoreBadge score={agg.score} trend={agg.trend}/>
+          <div style={{marginTop:10}}><StarRating score={agg.score} size={24} gap={4}/></div>
+          <div style={{fontSize:12,color:T.textTertiary,marginTop:8,fontFamily:T.mono}}>{agg.count} goal{agg.count!==1?"s":""} scored</div>
+        </div>
+        <div style={{width:1,height:80,background:T.borderSubtle,flexShrink:0}}/>
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{fontSize:11,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>12-month trend</div>
+          <Sparkline data={trendData} color={agg.trend>=0?T.green:T.rose} w={220} h={48} fill/>
+        </div>
+        <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+          <div onClick={()=>onNavigate("simulator")} style={{padding:"8px 18px",borderRadius:99,background:T.accent,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap"}}>{IC.sparkle("#fff",12)} Simulate</div>
+          <div onClick={()=>onNavigate("benchmarks")} style={{padding:"8px 18px",borderRadius:99,background:T.surfaceMuted,border:`1px solid ${T.border}`,color:T.textSecondary,fontSize:12,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap"}}>Benchmarks</div>
+          <div onClick={()=>onNavigate("portfolio")} style={{padding:"8px 18px",borderRadius:99,background:T.surfaceMuted,border:`1px solid ${T.border}`,color:T.textSecondary,fontSize:12,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap"}}>Portfolio</div>
+        </div>
+      </div>
+
+      {/* ── AI Briefing Card ── */}
+      <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:T.r,padding:"16px 20px",marginBottom:20,display:"flex",alignItems:"center",gap:14}}>
+        <div style={{width:38,height:38,borderRadius:10,background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{IC.sparkle("#fff",16)}</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:13.5,fontWeight:500,letterSpacing:"-0.01em",marginBottom:2}}>
+            {atRiskCount>0
+              ?`${atRiskCount} goal${atRiskCount!==1?"s":""} need attention`
+              :"All goals are tracking well"}
+          </div>
+          <div style={{fontSize:12,color:T.textSecondary,lineHeight:1.5}}>
+            {topSignal&&weakSignal
+              ?`Strongest signal: ${topSignal.label} (${topSignal.value}%). Weakest: ${weakSignal.label} (${weakSignal.value}%). ${recs.length>0?`Top recommendation: ${recs[0].action}`:""}`
+              :"Complete onboarding to see signal analysis."}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Signal Summary ── */}
+      <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:T.r,padding:"18px 20px",marginBottom:20}}>
+        <div style={{fontSize:11,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:14}}>Signal Health</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
+          {GOAL_SIGNAL_TYPES.map(sig=>{
+            const val=sigAvgs[sig.id]||0;
+            return<SignalBar key={sig.id} label={sig.label} value={val} color={sig.color} weight={sig.weight}/>;
+          })}
+        </div>
+      </div>
+
+      {/* ── Category Filter Tabs ── */}
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16,paddingBottom:14,borderBottom:`1px solid ${T.borderSubtle}`}}>
+        {categories.map(cat=>{
+          const isActive=activeCategory===cat;
+          const count=cat==="All"?scoredGoals.length:scoredGoals.filter(g=>g.category===cat).length;
+          return<div key={cat} className={`gd-tab${isActive?" active":""}`} onClick={()=>setActiveCategory(cat)}>
+            {cat}{count>0&&<span style={{marginLeft:4,fontSize:10,opacity:0.75}}>({count})</span>}
+          </div>;
+        })}
+      </div>
+
+      {/* ── Goal Cards Grid ── */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
+        {filtered.map((goal,idx)=>{
+          const catColor=getCatColor(goal.category);
+          const catSoft=getCatSoft(goal.category);
+          /* Top signal for this goal */
+          const sigs=goal.signals||{};
+          const sigEntries=Object.entries(sigs).sort((a,b)=>b[1]-a[1]);
+          const topSig=sigEntries[0]?GOAL_SIGNAL_TYPES.find(s=>s.id===sigEntries[0][0]):null;
+          const topSigVal=sigEntries[0]?sigEntries[0][1]:0;
+
+          return<div key={goal.id} className="gd-card" onClick={()=>onSelectGoal(goal.id)} style={{animation:`fadeIn 0.4s ease ${idx*0.04}s both`}}>
+            {/* Header */}
+            <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:12}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:catColor,flexShrink:0,marginTop:6}}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:T.serif,fontSize:14.5,fontWeight:500,letterSpacing:"-0.02em",lineHeight:1.35,marginBottom:4}}>{goal.name}</div>
+                <span className="chip" style={{background:catSoft,color:catColor,fontSize:9}}>{goal.category}</span>
+              </div>
+            </div>
+
+            {/* Score row */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <StarRating score={goal.score} size={16} gap={2}/>
+                <span style={{fontFamily:T.serif,fontSize:20,fontWeight:500,letterSpacing:"-0.02em"}}>{goal.score}</span>
+              </div>
+              {goal.trend!==0&&<span className="chip" style={{background:goal.trend>0?T.greenSoft:T.roseSoft,color:goal.trend>0?T.green:T.rose}}>
+                {goal.trend>0?"↑":"↓"} {Math.abs(goal.trend)}
+              </span>}
+            </div>
+
+            {/* Top signal mini bar */}
+            {topSig&&<div style={{marginTop:4}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+                <span style={{fontSize:10.5,color:T.textTertiary}}>Top: {topSig.label}</span>
+                <span style={{fontSize:10.5,fontFamily:T.mono,fontWeight:600,color:topSigVal>=70?T.green:topSigVal>=40?T.amber:T.rose}}>{topSigVal}%</span>
+              </div>
+              <div style={{height:4,borderRadius:2,background:T.surfaceMuted,overflow:"hidden"}}>
+                <div style={{height:"100%",width:`${Math.min(100,topSigVal)}%`,borderRadius:2,background:topSigVal>=70?T.green:topSigVal>=40?T.amber:T.rose,opacity:0.75,transition:"width 0.6s ease"}}/>
+              </div>
+            </div>}
+
+            {/* Lens-specific indicator */}
+            {lens==="risk"&&goal.score<3.0&&<div style={{marginTop:10,fontSize:10.5,color:T.rose,fontFamily:T.mono,display:"flex",alignItems:"center",gap:4}}>
+              {IC.shield(T.rose,12)} At risk — dragging overall score down
+            </div>}
+            {lens==="opportunity"&&<div style={{marginTop:10,fontSize:10.5,color:T.highlight,fontFamily:T.mono,display:"flex",alignItems:"center",gap:4}}>
+              {IC.sparkle(T.highlight,12)} +{(5-goal.score).toFixed(1)} potential uplift
+            </div>}
+          </div>;
+        })}
+      </div>
+
+      {filtered.length===0&&<div style={{textAlign:"center",padding:"40px 20px"}}>
+        <div style={{fontSize:13,color:T.textTertiary,marginBottom:12}}>No goals in this category.</div>
+        <div onClick={()=>setActiveCategory("All")} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"7px 16px",borderRadius:99,background:T.surfaceMuted,border:`1px solid ${T.border}`,fontSize:12,color:T.textSecondary,cursor:"pointer"}}>Show all goals</div>
+      </div>}
+
+    </div>
+  </div>;
+}
+
+/* ═══ GOAL DETAIL ═══ */
+
+function GoalDetail({goalId,industry,onBack,onNavigate}){
+  const goal=OPERATIONAL_GOALS.find(g=>g.id===goalId);
+  const scoreData=GOAL_SCORES[goalId];
+  const ind=INDUSTRIES.find(i=>i.id===industry)||INDUSTRIES[0];
+
+  if(!goal||!scoreData)return<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:40}}>
+    <div style={{textAlign:"center"}}>
+      <div style={{fontSize:14,color:T.textTertiary,marginBottom:12}}>Goal not found</div>
+      <div onClick={onBack} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"8px 16px",borderRadius:99,background:T.accent,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer"}}>{IC.chevLeft("#fff",14)} Back to Dashboard</div>
+    </div>
+  </div>;
+
+  const recs=(GOAL_RECOMMENDATIONS[industry]||[]).filter(r=>r.goalId===goalId);
+  const appsForGoal=getAppsForGoal(goalId);
+  const workflows=getAppWorkflowsForGoal(goalId);
+  const connectorIds=getAppConnectorsForGoal(goalId);
+  const connectors=connectorIds.map(cId=>getConnectorById(cId)).filter(Boolean);
+  const pa=PEOPLE_ASSETS_TEMPLATES[industry]||{people:[],assets:[]};
+  const people=pa.people.filter(p=>p.goalIds.includes(goalId));
+  const assets=pa.assets.filter(a=>a.goalIds.includes(goalId));
+  const trendData=SCORE_TREND_DATA[industry]||SCORE_TREND_DATA.manufacturing;
+
+  /* Category colour helpers */
+  const getCatColor=(cat)=>{
+    if(!cat)return T.accent;const l=cat.toLowerCase();
+    if(l.includes("quality"))return T.violet;if(l.includes("safety"))return T.rose;
+    if(l.includes("maintenance")||l.includes("reliability")||l.includes("fleet"))return T.amber;
+    if(l.includes("supply")||l.includes("inventory")||l.includes("warehouse"))return T.green;
+    if(l.includes("compliance")||l.includes("delivery")||l.includes("visibility"))return T.highlight;
+    if(l.includes("cost")||l.includes("revenue")||l.includes("profitability"))return T.amber;
+    if(l.includes("workforce")||l.includes("labor"))return T.violet;
+    if(l.includes("speed")||l.includes("experience"))return T.highlight;
+    if(l.includes("drive")||l.includes("digital"))return T.rose;
+    if(l.includes("production")||l.includes("throughput"))return T.green;
+    if(l.includes("route")||l.includes("optimization"))return T.violet;
+    if(l.includes("multi-unit")||l.includes("franchise"))return T.amber;
+    return T.accent;
+  };
+  const getCatSoft=(cat)=>{
+    const c=getCatColor(cat);
+    if(c===T.violet)return T.violetSoft;if(c===T.rose)return T.roseSoft;
+    if(c===T.amber)return T.amberSoft;if(c===T.green)return T.greenSoft;
+    if(c===T.highlight)return T.highlightSoft;return T.accentSoft;
+  };
+
+  const catColor=getCatColor(goal.category);
+  const catSoft=getCatSoft(goal.category);
+
+  const sectionLabel={fontSize:11,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:14,display:"flex",alignItems:"center",gap:6};
+  const card={background:T.surface,border:`1px solid ${T.border}`,borderRadius:T.r,padding:"18px 20px",marginBottom:14};
+
+  return<div style={{flex:1,overflowY:"auto"}}>
+    <div style={{maxWidth:960,margin:"0 auto",padding:"28px 24px 60px"}}>
+
+      {/* ── Back Button ── */}
+      <div onClick={onBack} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 16px",borderRadius:99,background:T.surfaceMuted,border:`1px solid ${T.border}`,color:T.textSecondary,fontSize:12,fontWeight:500,cursor:"pointer",marginBottom:20,transition:"all 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=T.accentBorder;e.currentTarget.style.color=T.text;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.color=T.textSecondary;}}>
+        {IC.chevLeft(T.textSecondary,14)} Back to Dashboard
+      </div>
+
+      {/* ── Goal Header ── */}
+      <div style={{...card,padding:"28px 32px"}}>
+        <div style={{display:"flex",alignItems:"flex-start",gap:16,flexWrap:"wrap"}}>
+          <div style={{flex:1,minWidth:280}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+              <div style={{width:10,height:10,borderRadius:"50%",background:catColor}}/>
+              <span className="chip" style={{background:catSoft,color:catColor,fontSize:10}}>{goal.category}</span>
+            </div>
+            <h1 style={{fontFamily:T.serif,fontSize:"clamp(20px,3vw,26px)",fontWeight:400,letterSpacing:"-0.03em",lineHeight:1.3,marginBottom:8}}>{goal.name}</h1>
+            <p style={{fontSize:13,color:T.textSecondary,lineHeight:1.6,marginBottom:16}}>{goal.description}</p>
+
+            <div style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+              <ScoreBadge score={scoreData.score} trend={scoreData.trend}/>
+              <div style={{marginLeft:4}}><StarRating score={scoreData.score} size={20} gap={3}/></div>
+            </div>
+          </div>
+
+          {/* Trend sparkline */}
+          <div style={{flex:"0 0 200px",minWidth:160}}>
+            <div style={{fontSize:11,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>12-month trend</div>
+            <Sparkline data={trendData} color={scoreData.trend>=0?T.green:T.rose} w={180} h={60} fill/>
+          </div>
+        </div>
+
+        {/* Metrics */}
+        {goal.metrics&&goal.metrics.length>0&&<div style={{marginTop:18,paddingTop:16,borderTop:`1px solid ${T.borderSubtle}`}}>
+          <div style={{fontSize:10,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>Key Metrics</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+            {goal.metrics.map((m,i)=><span key={i} className="chip" style={{background:T.surfaceMuted,color:T.text,fontSize:10,fontFamily:T.mono}}>{typeof m==="string"?m:m.name}</span>)}
+          </div>
+        </div>}
+      </div>
+
+      {/* ── Signals Section ── */}
+      <div style={card}>
+        <div style={sectionLabel}>{IC.chart(T.textTertiary,14)} Signals</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:10}}>
+          {GOAL_SIGNAL_TYPES.map(sig=>{
+            const val=scoreData.signals[sig.id]||0;
+            return<SignalBar key={sig.id} label={sig.label} value={val} color={sig.color} weight={sig.weight}/>;
+          })}
+        </div>
+      </div>
+
+      {/* ── Connected Items ── */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:14,marginBottom:14}}>
+
+        {/* Apps */}
+        {appsForGoal.length>0&&<div style={card}>
+          <div style={sectionLabel}>{IC.catalog(T.textTertiary,14)} Apps ({appsForGoal.length})</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {appsForGoal.map(a=><div key={a.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:T.rSm,background:T.surfaceMuted}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:a.color||T.accent,flexShrink:0}}/>
+              <span style={{flex:1,fontSize:12,fontWeight:500}}>{a.name}</span>
+              <span style={{fontSize:10,color:T.textTertiary,fontFamily:T.mono}}>{(a.workflows||[]).length} workflows</span>
+            </div>)}
+          </div>
+        </div>}
+
+        {/* Connectors */}
+        {connectors.length>0&&<div style={card}>
+          <div style={sectionLabel}>{IC.connector(T.textTertiary,14)} Data Sources ({connectors.length})</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {connectors.map(c=><div key={c.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:T.rSm,background:T.surfaceMuted}}>
+              {IC.connector(T.rose,12)}
+              <span style={{flex:1,fontSize:12,fontWeight:500}}>{c.name}</span>
+              <span style={{fontSize:10,color:T.textTertiary}}>{c.desc||c.description||""}</span>
+            </div>)}
+          </div>
+        </div>}
+
+        {/* Workflows */}
+        {workflows.length>0&&<div style={card}>
+          <div style={sectionLabel}>{IC.workflow(T.textTertiary,14)} Workflows ({workflows.length})</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {workflows.map(w=><div key={w.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:T.rSm,background:T.surfaceMuted}}>
+              {IC.workflow(T.green,12)}
+              <span style={{flex:1,fontSize:12,fontWeight:500}}>{w.name}</span>
+              <span style={{fontSize:10,color:T.textTertiary,fontFamily:T.mono}}>{w.steps} steps</span>
+            </div>)}
+          </div>
+        </div>}
+
+        {/* People */}
+        {people.length>0&&<div style={card}>
+          <div style={sectionLabel}>{IC.people(T.textTertiary,14)} People ({people.length})</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {people.map((p,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:T.rSm,background:T.surfaceMuted}}>
+              {IC.people(T.violet,12)}
+              <span style={{fontSize:12,fontWeight:500}}>{p.role}</span>
+            </div>)}
+          </div>
+        </div>}
+
+        {/* Assets */}
+        {assets.length>0&&<div style={card}>
+          <div style={sectionLabel}>{IC.asset(T.textTertiary,14)} Assets ({assets.length})</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {assets.map((a,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:T.rSm,background:T.surfaceMuted}}>
+              {IC.asset(T.amber,12)}
+              <span style={{fontSize:12,fontWeight:500}}>{a.name}</span>
+            </div>)}
+          </div>
+        </div>}
+      </div>
+
+      {/* ── Recommendations Section ── */}
+      {recs.length>0&&<div style={card}>
+        <div style={sectionLabel}>{IC.sparkle(T.textTertiary,14)} Recommendations</div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {recs.map(rec=>{
+            const sig=GOAL_SIGNAL_TYPES.find(s=>s.id===rec.signal);
+            return<div key={rec.id} style={{padding:"12px 14px",borderRadius:T.rSm,border:`1px solid ${T.borderSubtle}`,background:T.surfaceHover,display:"flex",alignItems:"flex-start",gap:12}}>
+              <div style={{width:32,height:32,borderRadius:8,background:T.greenSoft,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:2}}>{IC.sparkle(T.green,14)}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:500,letterSpacing:"-0.01em",marginBottom:4}}>{rec.action}</div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  <span className="chip" style={{background:T.greenSoft,color:T.green,fontSize:9}}>+{rec.impact} score impact</span>
+                  <span className="chip" style={{background:rec.effort==="Low"?T.greenSoft:rec.effort==="Medium"?T.amberSoft:T.roseSoft,color:rec.effort==="Low"?T.green:rec.effort==="Medium"?T.amber:T.rose,fontSize:9}}>{rec.effort} effort</span>
+                  <span className="chip" style={{background:T.surfaceMuted,color:T.textSecondary,fontSize:9}}>{rec.timeframe}</span>
+                  {sig&&<span className="chip" style={{background:T.surfaceMuted,color:T.textSecondary,fontSize:9}}>{sig.label}</span>}
+                </div>
+              </div>
+            </div>;
+          })}
+        </div>
+      </div>}
+
+      {/* ── Simulate CTA ── */}
+      <div style={{display:"flex",gap:12,marginTop:8}}>
+        <div onClick={()=>onNavigate("simulator")} style={{padding:"10px 22px",borderRadius:99,background:T.accent,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>{IC.sparkle("#fff",13)} Simulate this goal</div>
+        <div onClick={()=>onNavigate("benchmarks")} style={{padding:"10px 22px",borderRadius:99,background:T.surfaceMuted,border:`1px solid ${T.border}`,color:T.textSecondary,fontSize:13,fontWeight:500,cursor:"pointer"}}>View Benchmarks</div>
+      </div>
+
+    </div>
+  </div>;
+}
+
+/* ═══ GOAL SIMULATOR ═══ */
+
+function GoalSimulator({industry,selectedGoals,onBack}){
+  const[toggled,setToggled]=useState([]);
+  const recs=GOAL_RECOMMENDATIONS[industry]||[];
+  const agg=computeAggregateScore(selectedGoals);
+  const currentScore=agg.score;
+
+  /* Compute projected score from toggled recommendations */
+  const totalImpact=toggled.reduce((sum,id)=>{
+    const rec=recs.find(r=>r.id===id);
+    return sum+(rec?rec.impact:0);
+  },0);
+  const projectedScore=Math.min(5,Math.round((currentScore+totalImpact)*10)/10);
+
+  const toggleRec=(id)=>{
+    setToggled(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);
+  };
+
+  /* Effort summary */
+  const effortOrder={Low:1,Medium:2,High:3};
+  const selectedRecs=recs.filter(r=>toggled.includes(r.id));
+  const maxEffort=selectedRecs.length>0
+    ?selectedRecs.reduce((max,r)=>effortOrder[r.effort]>effortOrder[max]?r.effort:max,selectedRecs[0].effort)
+    :"None";
+
+  /* Find goal name for a recommendation */
+  const allGoals=getGoalsByIndustry(industry);
+  const goalName=(goalId)=>{
+    const g=allGoals.find(x=>x.id===goalId);
+    return g?g.name:goalId;
+  };
+
+  /* Signal label lookup */
+  const signalLabel=(sigId)=>{
+    const sig=GOAL_SIGNAL_TYPES.find(s=>s.id===sigId);
+    return sig?sig.label:sigId;
+  };
+
+  const effortColor=(e)=>({Low:T.green,Medium:T.amber,High:T.rose}[e]||T.textTertiary);
+  const effortSoft=(e)=>({Low:T.greenSoft,Medium:T.amberSoft,High:T.roseSoft}[e]||T.surfaceMuted);
+
+  return<div style={{flex:1,overflowY:"auto"}}>
+    <div style={{maxWidth:920,margin:"0 auto",padding:"28px 24px 60px"}}>
+
+      {/* Back button */}
+      <div onClick={onBack} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:99,border:`1px solid ${T.border}`,background:T.surface,color:T.textSecondary,fontSize:12,fontWeight:500,cursor:"pointer",marginBottom:20,transition:"all 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=T.accentBorder;e.currentTarget.style.color=T.text;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.color=T.textSecondary;}}>
+        {IC.chevLeft(T.textSecondary,14)} Back to Dashboard
+      </div>
+
+      {/* Page header */}
+      <div style={{marginBottom:28}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+          <div style={{width:38,height:38,borderRadius:10,background:T.highlightSoft,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.sparkle(T.highlight,18)}</div>
+          <h1 style={{fontFamily:T.serif,fontSize:"clamp(22px,3vw,28px)",fontWeight:400,letterSpacing:"-0.03em",lineHeight:1.2}}>Goal Simulator</h1>
+        </div>
+        <p style={{fontSize:13,color:T.textSecondary,lineHeight:1.6,maxWidth:560}}>Toggle improvement actions to see how they would impact your aggregate score. Select actions you can commit to, then create an action plan.</p>
+      </div>
+
+      {/* Score comparison hero */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:20,alignItems:"center",padding:"28px 32px",borderRadius:T.r,background:T.surface,border:`1px solid ${T.border}`,marginBottom:24,boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
+        {/* Current */}
+        <div style={{textAlign:"center"}}>
+          <div className="lbl" style={{marginBottom:10,justifyContent:"center"}}>Current Score</div>
+          <ScoreBadge score={currentScore} trend={agg.trend}/>
+          <div style={{marginTop:10,display:"flex",justifyContent:"center"}}><StarRating score={currentScore} size={22} gap={2}/></div>
+        </div>
+
+        {/* Arrow */}
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+          <svg width="40" height="24" viewBox="0 0 40 24" fill="none"><path d="M2 12h32M28 6l6 6-6 6" stroke={toggled.length>0?T.green:T.border} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          {toggled.length>0&&<span className="chip" style={{background:T.greenSoft,color:T.green,fontWeight:600}}>+{totalImpact.toFixed(2)}</span>}
+        </div>
+
+        {/* Projected */}
+        <div style={{textAlign:"center"}}>
+          <div className="lbl" style={{marginBottom:10,justifyContent:"center"}}>Projected Score</div>
+          <ScoreBadge score={projectedScore} trend={0} size="large"/>
+          <div style={{marginTop:10,display:"flex",justifyContent:"center"}}><StarRating score={projectedScore} size={22} gap={2}/></div>
+        </div>
+      </div>
+
+      {/* Main layout: recommendations + sidebar */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 300px",gap:20,alignItems:"start"}}>
+
+        {/* Recommendations list */}
+        <div>
+          <div className="lbl" style={{marginBottom:12}}>Improvement Actions ({recs.length})</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {recs.map(rec=>{
+              const active=toggled.includes(rec.id);
+              return<div key={rec.id} onClick={()=>toggleRec(rec.id)} style={{
+                padding:"16px 20px",borderRadius:T.r,
+                background:active?T.greenSoft:T.surface,
+                border:`1.5px solid ${active?T.greenBorder:T.border}`,
+                cursor:"pointer",transition:"all 0.2s",
+                boxShadow:active?"0 2px 8px rgba(16,185,129,0.08)":"0 1px 2px rgba(0,0,0,0.03)",
+              }} onMouseEnter={e=>{if(!active)e.currentTarget.style.borderColor=T.accentBorder;}} onMouseLeave={e=>{if(!active)e.currentTarget.style.borderColor=active?T.greenBorder:T.border;}}>
+                <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
+                  {/* Checkbox */}
+                  <div style={{
+                    width:22,height:22,borderRadius:6,flexShrink:0,marginTop:1,
+                    border:active?"none":`2px solid ${T.border}`,
+                    background:active?T.green:"transparent",
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    transition:"all 0.2s",
+                  }}>
+                    {active&&IC.check("#fff",13)}
+                  </div>
+
+                  {/* Content */}
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:14,fontWeight:500,letterSpacing:"-0.01em",lineHeight:1.35,marginBottom:4}}>{rec.action}</div>
+                    <div style={{fontSize:12,color:T.textSecondary,lineHeight:1.5,marginBottom:8}}>Goal: {goalName(rec.goalId)}</div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center"}}>
+                      <span className="chip" style={{background:T.greenSoft,color:T.green,fontWeight:600}}>+{rec.impact} score</span>
+                      <span className="chip" style={{background:effortSoft(rec.effort),color:effortColor(rec.effort)}}>{rec.effort} effort</span>
+                      <span className="chip" style={{background:T.surfaceMuted,color:T.textSecondary}}>{rec.timeframe}</span>
+                      <span className="chip" style={{background:T.highlightSoft,color:T.highlight}}>{signalLabel(rec.signal)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>;
+            })}
+          </div>
+        </div>
+
+        {/* Sidebar summary */}
+        <div style={{position:"sticky",top:72}}>
+          <div style={{borderRadius:T.r,background:T.surface,border:`1px solid ${T.border}`,padding:"20px",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
+            <div className="lbl" style={{marginBottom:16}}>Action Plan Summary</div>
+
+            {/* Projected score */}
+            <div style={{textAlign:"center",padding:"16px 0",marginBottom:16,borderBottom:`1px solid ${T.borderSubtle}`}}>
+              <div style={{fontFamily:T.serif,fontSize:36,fontWeight:500,letterSpacing:"-0.03em",color:toggled.length>0?T.green:T.text,transition:"color 0.3s"}}>{projectedScore}</div>
+              <div style={{fontSize:11,color:T.textTertiary,fontFamily:T.mono,marginTop:4,textTransform:"uppercase",letterSpacing:"0.04em"}}>Projected Score</div>
+            </div>
+
+            {/* Stats */}
+            <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:12,color:T.textSecondary}}>Actions selected</span>
+                <span style={{fontSize:13,fontWeight:600,fontFamily:T.mono}}>{toggled.length} / {recs.length}</span>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:12,color:T.textSecondary}}>Score improvement</span>
+                <span className="chip" style={{background:toggled.length>0?T.greenSoft:T.surfaceMuted,color:toggled.length>0?T.green:T.textTertiary,fontWeight:600}}>+{totalImpact.toFixed(2)}</span>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:12,color:T.textSecondary}}>Max effort level</span>
+                <span className="chip" style={{background:toggled.length>0?effortSoft(maxEffort):T.surfaceMuted,color:toggled.length>0?effortColor(maxEffort):T.textTertiary}}>{toggled.length>0?maxEffort:"--"}</span>
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <div style={{
+                padding:"10px 0",borderRadius:99,textAlign:"center",fontSize:13,fontWeight:600,
+                background:toggled.length>0?T.accent:T.surfaceMuted,
+                color:toggled.length>0?"#fff":T.textTertiary,
+                cursor:toggled.length>0?"pointer":"default",
+                transition:"all 0.2s",opacity:toggled.length>0?1:0.6,
+              }}>Create Action Plan</div>
+              {toggled.length>0&&<div onClick={(e)=>{e.stopPropagation();setToggled([]);}} style={{
+                padding:"10px 0",borderRadius:99,textAlign:"center",fontSize:13,fontWeight:500,
+                background:"transparent",color:T.textSecondary,cursor:"pointer",
+                border:`1px solid ${T.border}`,transition:"all 0.15s",
+              }} onMouseEnter={e=>{e.currentTarget.style.background=T.surfaceHover;}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";}}>Reset</div>}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+/* ═══ GOAL BENCHMARKS ═══ */
+
+function GoalBenchmarks({industry,selectedGoals,onBack}){
+  const bench=GOAL_BENCHMARKS[industry]||{siteCount:0,avgScore:0,top10:0,percentile:0,signalAvgs:{}};
+  const agg=computeAggregateScore(selectedGoals);
+  const yourSignals=computeSignalAverages(selectedGoals);
+  const allGoals=getGoalsByIndustry(industry);
+  const ind=INDUSTRIES.find(i=>i.id===industry)||INDUSTRIES[0];
+
+  /* Count signals where you outperform */
+  const signalKeys=Object.keys(bench.signalAvgs||{});
+  const outperformCount=signalKeys.filter(k=>(yourSignals[k]||0)>(bench.signalAvgs[k]||0)).length;
+
+  /* Selected goals with scores for comparison */
+  const scoredGoals=selectedGoals
+    .map(id=>{const g=allGoals.find(x=>x.id===id);const s=GOAL_SCORES[id];return g&&s?{...g,...s}:null;})
+    .filter(Boolean)
+    .sort((a,b)=>a.score-b.score);
+
+  /* Percentile position description */
+  const pctDesc=bench.percentile<=25?"Top quartile":bench.percentile<=50?"Second quartile":bench.percentile<=75?"Third quartile":"Bottom quartile";
+
+  return<div style={{flex:1,overflowY:"auto"}}>
+    <div style={{maxWidth:920,margin:"0 auto",padding:"28px 24px 60px"}}>
+
+      {/* Back button */}
+      <div onClick={onBack} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:99,border:`1px solid ${T.border}`,background:T.surface,color:T.textSecondary,fontSize:12,fontWeight:500,cursor:"pointer",marginBottom:20,transition:"all 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=T.accentBorder;e.currentTarget.style.color=T.text;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.color=T.textSecondary;}}>
+        {IC.chevLeft(T.textSecondary,14)} Back to Dashboard
+      </div>
+
+      {/* Page header */}
+      <div style={{marginBottom:28}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+          <div style={{width:38,height:38,borderRadius:10,background:ind.colorSoft,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.chart(ind.color)}</div>
+          <h1 style={{fontFamily:T.serif,fontSize:"clamp(22px,3vw,28px)",fontWeight:400,letterSpacing:"-0.03em",lineHeight:1.2}}>Goal Benchmarks</h1>
+        </div>
+        <p style={{fontSize:13,color:T.textSecondary,lineHeight:1.6,maxWidth:560}}>See how your goals compare to {bench.siteCount.toLocaleString()} sites in {ind.label}.</p>
+      </div>
+
+      {/* Industry context banner */}
+      <div style={{padding:"20px 24px",borderRadius:T.r,background:T.surface,border:`1px solid ${T.border}`,marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:14}}>
+          <div style={{width:48,height:48,borderRadius:12,background:ind.colorSoft,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.building(ind.color)}</div>
+          <div>
+            <div style={{fontSize:14,fontWeight:600,letterSpacing:"-0.01em",marginBottom:2}}>Compared to {bench.siteCount.toLocaleString()} sites</div>
+            <div style={{fontSize:12,color:T.textSecondary}}>{ind.label} industry benchmark</div>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:20}}>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontFamily:T.serif,fontSize:22,fontWeight:500,letterSpacing:"-0.02em"}}>{bench.avgScore}</div>
+            <div style={{fontSize:10,color:T.textTertiary,fontFamily:T.mono,marginTop:2}}>Avg Score</div>
+          </div>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontFamily:T.serif,fontSize:22,fontWeight:500,letterSpacing:"-0.02em",color:T.green}}>{bench.top10}</div>
+            <div style={{fontSize:10,color:T.textTertiary,fontFamily:T.mono,marginTop:2}}>Top 10%</div>
+          </div>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontFamily:T.serif,fontSize:22,fontWeight:500,letterSpacing:"-0.02em",color:agg.score>=bench.avgScore?T.green:T.amber}}>{agg.score}</div>
+            <div style={{fontSize:10,color:T.textTertiary,fontFamily:T.mono,marginTop:2}}>Your Score</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Percentile position */}
+      <div style={{padding:"18px 24px",borderRadius:T.r,background:T.surface,border:`1px solid ${T.border}`,marginBottom:20,boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
+        <div className="lbl" style={{marginBottom:12}}>Percentile Position</div>
+        <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:10}}>
+          <div style={{fontFamily:T.serif,fontSize:32,fontWeight:500,letterSpacing:"-0.03em"}}>{bench.percentile}<span style={{fontSize:16,fontWeight:400,color:T.textTertiary}}>th</span></div>
+          <div>
+            <div style={{fontSize:13,fontWeight:500,letterSpacing:"-0.01em"}}>{pctDesc}</div>
+            <div style={{fontSize:12,color:T.textSecondary}}>of {ind.label} sites</div>
+          </div>
+        </div>
+        {/* Percentile bar */}
+        <div style={{position:"relative",height:12,borderRadius:6,background:T.surfaceMuted,overflow:"hidden"}}>
+          <div style={{position:"absolute",left:0,top:0,height:"100%",width:`${100-bench.percentile}%`,borderRadius:6,background:`linear-gradient(90deg, ${T.green}, ${T.amber})`,transition:"width 0.8s ease"}}/>
+          <div style={{position:"absolute",left:`${100-bench.percentile}%`,top:-4,width:3,height:20,borderRadius:2,background:T.accent,transform:"translateX(-50%)"}}/>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:9.5,fontFamily:T.mono,color:T.textTertiary}}>
+          <span>Top 10%</span>
+          <span>Median</span>
+          <span>Bottom</span>
+        </div>
+      </div>
+
+      {/* AI Insight */}
+      <div style={{padding:"16px 20px",borderRadius:T.r,background:T.accentSoft,border:`1px solid ${T.accentBorder}`,marginBottom:24,display:"flex",alignItems:"center",gap:12}}>
+        <div style={{width:32,height:32,borderRadius:8,background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{IC.sparkle("#fff",14)}</div>
+        <div style={{fontSize:13,color:T.text,lineHeight:1.5,letterSpacing:"-0.01em"}}>
+          You outperform on <strong>{outperformCount} of {signalKeys.length}</strong> signals compared to the {ind.label} average.
+          {agg.score>=bench.avgScore
+            ?" Your overall score is above the industry average — focus on closing the gap to the top 10%."
+            :" Focus on improving your weakest signals to move above the industry average."}
+        </div>
+      </div>
+
+      {/* Signal comparison table */}
+      <div style={{borderRadius:T.r,background:T.surface,border:`1px solid ${T.border}`,marginBottom:24,overflow:"hidden",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
+        <div style={{padding:"16px 20px",borderBottom:`1px solid ${T.borderSubtle}`}}>
+          <div className="lbl">Signal Comparison</div>
+        </div>
+        {/* Table header */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 100px 100px 100px",gap:0,padding:"10px 20px",borderBottom:`1px solid ${T.borderSubtle}`,background:T.surfaceHover}}>
+          <span style={{fontSize:10,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.04em"}}>Signal</span>
+          <span style={{fontSize:10,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.04em",textAlign:"center"}}>Your Avg</span>
+          <span style={{fontSize:10,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.04em",textAlign:"center"}}>Industry</span>
+          <span style={{fontSize:10,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.04em",textAlign:"center"}}>Top 10%</span>
+        </div>
+        {/* Table rows */}
+        {GOAL_SIGNAL_TYPES.map((sig,i)=>{
+          const yours=yourSignals[sig.id]||0;
+          const indAvg=bench.signalAvgs[sig.id]||0;
+          const top10Val=Math.min(100,Math.round(indAvg*1.35));
+          const better=yours>indAvg;
+          return<div key={sig.id} style={{display:"grid",gridTemplateColumns:"1fr 100px 100px 100px",gap:0,padding:"12px 20px",borderBottom:i<GOAL_SIGNAL_TYPES.length-1?`1px solid ${T.borderSubtle}`:"none",alignItems:"center"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:sig.color,flexShrink:0}}/>
+              <span style={{fontSize:13,letterSpacing:"-0.01em"}}>{sig.label}</span>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <span style={{fontSize:13,fontWeight:600,fontFamily:T.mono,color:better?T.green:T.amber}}>{yours}%</span>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <span style={{fontSize:13,fontFamily:T.mono,color:T.textSecondary}}>{indAvg}%</span>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <span style={{fontSize:13,fontFamily:T.mono,color:T.textTertiary}}>{top10Val}%</span>
+            </div>
+          </div>;
+        })}
+      </div>
+
+      {/* Per-goal comparison */}
+      <div style={{borderRadius:T.r,background:T.surface,border:`1px solid ${T.border}`,overflow:"hidden",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
+        <div style={{padding:"16px 20px",borderBottom:`1px solid ${T.borderSubtle}`}}>
+          <div className="lbl">Goal Score vs Industry Average</div>
+        </div>
+        {scoredGoals.map((g,i)=>{
+          const diff=Math.round((g.score-bench.avgScore)*10)/10;
+          const positive=diff>=0;
+          return<div key={g.id} style={{padding:"14px 20px",borderBottom:i<scoredGoals.length-1?`1px solid ${T.borderSubtle}`:"none",display:"flex",alignItems:"center",gap:14}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:500,letterSpacing:"-0.01em",marginBottom:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{g.name}</div>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                <StarRating score={g.score} size={14} gap={1}/>
+                <span style={{fontSize:12,fontFamily:T.mono,color:T.textSecondary}}>{g.score}</span>
+              </div>
+            </div>
+            {/* Comparison bar */}
+            <div style={{width:160,flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                <div style={{flex:1,height:6,borderRadius:3,background:T.surfaceMuted,overflow:"hidden",position:"relative"}}>
+                  <div style={{position:"absolute",left:`${(bench.avgScore/5)*100}%`,top:0,width:1.5,height:"100%",background:T.textTertiary,zIndex:1}}/>
+                  <div style={{height:"100%",width:`${(g.score/5)*100}%`,borderRadius:3,background:positive?T.green:T.amber,transition:"width 0.6s ease"}}/>
+                </div>
+                <span className="chip" style={{background:positive?T.greenSoft:T.amberSoft,color:positive?T.green:T.amber,fontWeight:600,fontSize:9,flexShrink:0}}>
+                  {positive?"+":""}{diff}
+                </span>
+              </div>
+            </div>
+          </div>;
+        })}
+      </div>
+    </div>
+  </div>;
+}
+
+/* ═══ GOAL PORTFOLIO ═══ */
+
+function GoalPortfolio({industry,selectedGoals,onBack}){
+  const allGoals=getGoalsByIndustry(industry);
+  const ind=INDUSTRIES.find(i=>i.id===industry)||INDUSTRIES[0];
+
+  /* Top 6 selected goals for the heatmap columns */
+  const displayGoals=useMemo(()=>{
+    return allGoals.filter(g=>selectedGoals.includes(g.id)&&GOAL_SCORES[g.id]).slice(0,6);
+  },[allGoals,selectedGoals]);
+
+  /* Summary stats */
+  const totalSites=SITES_LIST.length;
+  const avgSiteScore=useMemo(()=>{
+    const scores=SITES_LIST.map(s=>SITE_SCORES[s]?.score||0);
+    return scores.length?Math.round((scores.reduce((a,b)=>a+b,0)/scores.length)*10)/10:0;
+  },[]);
+  const belowThree=SITES_LIST.filter(s=>(SITE_SCORES[s]?.score||0)<3.0).length;
+  const trendingUp=SITES_LIST.filter(s=>(SITE_SCORES[s]?.trend||0)>0).length;
+
+  /* Generate deterministic per-site-per-goal scores (mock) */
+  const getSiteGoalScore=(siteIdx,goalId)=>{
+    const base=GOAL_SCORES[goalId]?.score||3.0;
+    const siteModifiers=[-0.2,0.1,-0.5,0.0];
+    const goalHash=goalId.charCodeAt(goalId.length-1)%5;
+    const offsets=[0.3,-0.4,0.2,-0.1,0.5];
+    const raw=base+siteModifiers[siteIdx]+(offsets[goalHash]*0.4);
+    return Math.max(0,Math.min(5,Math.round(raw*10)/10));
+  };
+
+  /* Colour for heatmap cell */
+  const cellColor=(score)=>{
+    if(score>=3.5)return{bg:T.greenSoft,border:T.greenBorder,text:T.green};
+    if(score>=2.5)return{bg:T.amberSoft,border:T.amberBorder,text:T.amber};
+    return{bg:T.roseSoft,border:T.roseBorder,text:T.rose};
+  };
+
+  return<div style={{flex:1,overflowY:"auto"}}>
+    <div style={{maxWidth:960,margin:"0 auto",padding:"28px 24px 60px"}}>
+
+      {/* Back button */}
+      <div onClick={onBack} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:99,border:`1px solid ${T.border}`,background:T.surface,color:T.textSecondary,fontSize:12,fontWeight:500,cursor:"pointer",marginBottom:20,transition:"all 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=T.accentBorder;e.currentTarget.style.color=T.text;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.color=T.textSecondary;}}>
+        {IC.chevLeft(T.textSecondary,14)} Back to Dashboard
+      </div>
+
+      {/* Page header */}
+      <div style={{marginBottom:28}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+          <div style={{width:38,height:38,borderRadius:10,background:ind.colorSoft,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.grid(ind.color,18)}</div>
+          <h1 style={{fontFamily:T.serif,fontSize:"clamp(22px,3vw,28px)",fontWeight:400,letterSpacing:"-0.03em",lineHeight:1.2}}>Goal Portfolio</h1>
+        </div>
+        <p style={{fontSize:13,color:T.textSecondary,lineHeight:1.6,maxWidth:560}}>Multi-site goal tracking. See how goals perform across your locations.</p>
+      </div>
+
+      {/* Summary strip */}
+      <div style={{display:"flex",gap:16,marginBottom:24,flexWrap:"wrap"}}>
+        {[
+          {label:"Sites",value:totalSites,color:T.accent},
+          {label:"Avg Score",value:avgSiteScore,color:T.highlight},
+          {label:"Below 3.0",value:belowThree,color:T.rose},
+          {label:"Trending Up",value:trendingUp,color:T.green},
+        ].map((s,i)=><div key={i} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:T.r,padding:"14px 20px",flex:"1 1 140px",minWidth:120}}>
+          <div style={{fontSize:10,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:6}}>{s.label}</div>
+          <div style={{fontFamily:T.serif,fontSize:24,fontWeight:500,letterSpacing:"-0.02em",color:s.color}}>{s.value}</div>
+        </div>)}
+      </div>
+
+      {/* Heatmap grid */}
+      <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:T.r+4,overflow:"hidden",marginBottom:24}}>
+        {/* Header row */}
+        <div style={{display:"grid",gridTemplateColumns:`180px repeat(${displayGoals.length},1fr) 100px`,borderBottom:`1px solid ${T.border}`,background:T.surfaceHover}}>
+          <div style={{padding:"12px 16px",fontSize:10,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.06em",display:"flex",alignItems:"center"}}>Site</div>
+          {displayGoals.map(g=><div key={g.id} style={{padding:"10px 8px",fontSize:10,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.04em",textAlign:"center",lineHeight:1.3,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            {g.name.length>20?g.name.slice(0,18)+"...":g.name}
+          </div>)}
+          <div style={{padding:"12px 8px",fontSize:10,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:"center",display:"flex",alignItems:"center",justifyContent:"center"}}>Overall</div>
+        </div>
+
+        {/* Data rows */}
+        {SITES_LIST.map((site,sIdx)=>{
+          const siteData=SITE_SCORES[site]||{score:0,trend:0};
+          const overall=cellColor(siteData.score);
+          return<div key={site} style={{display:"grid",gridTemplateColumns:`180px repeat(${displayGoals.length},1fr) 100px`,borderBottom:sIdx<SITES_LIST.length-1?`1px solid ${T.borderSubtle}`:"none",transition:"background 0.15s"}} onMouseEnter={e=>e.currentTarget.style.background=T.surfaceHover} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+            {/* Site name */}
+            <div style={{padding:"14px 16px",display:"flex",alignItems:"center",gap:8}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:siteData.trend>0?T.green:siteData.trend<0?T.rose:T.textTertiary,flexShrink:0}}/>
+              <div>
+                <div style={{fontSize:13,fontWeight:500,letterSpacing:"-0.01em"}}>{site}</div>
+                {siteData.trend!==0&&<div style={{fontSize:10,color:siteData.trend>0?T.green:T.rose,fontFamily:T.mono,marginTop:2}}>
+                  {siteData.trend>0?"↑":"↓"} {Math.abs(siteData.trend)}
+                </div>}
+              </div>
+            </div>
+
+            {/* Goal score cells */}
+            {displayGoals.map(g=>{
+              const score=getSiteGoalScore(sIdx,g.id);
+              const c=cellColor(score);
+              return<div key={g.id} style={{padding:"10px 8px",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <div style={{width:"100%",maxWidth:56,padding:"6px 4px",borderRadius:T.rSm,background:c.bg,border:`1px solid ${c.border}`,textAlign:"center",fontSize:13,fontWeight:600,fontFamily:T.mono,color:c.text}}>{score}</div>
+              </div>;
+            })}
+
+            {/* Overall cell */}
+            <div style={{padding:"10px 8px",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <div style={{display:"flex",alignItems:"center",gap:4}}>
+                <span style={{fontSize:14,fontWeight:600,fontFamily:T.mono,color:overall.text}}>{siteData.score}</span>
+                <StarRating score={siteData.score} size={10} gap={1}/>
+              </div>
+            </div>
+          </div>;
+        })}
+      </div>
+
+      {/* Legend */}
+      <div style={{display:"flex",gap:16,alignItems:"center",marginBottom:8}}>
+        <span style={{fontSize:11,color:T.textTertiary,fontFamily:T.mono}}>Legend:</span>
+        {[
+          {label:"Above 3.5",bg:T.greenSoft,border:T.greenBorder,color:T.green},
+          {label:"2.5 - 3.5",bg:T.amberSoft,border:T.amberBorder,color:T.amber},
+          {label:"Below 2.5",bg:T.roseSoft,border:T.roseBorder,color:T.rose},
+        ].map((l,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:5}}>
+          <div style={{width:16,height:16,borderRadius:4,background:l.bg,border:`1px solid ${l.border}`}}/>
+          <span style={{fontSize:11,color:l.color,fontFamily:T.mono}}>{l.label}</span>
+        </div>)}
+      </div>
+
+    </div>
+  </div>;
+}
+
 /* ═══ HASH ROUTING ═══ */
 function parseHash(){
   const h=(window.location.hash||"").replace(/^#\/?/,"");
@@ -7642,7 +8658,7 @@ function parseHash(){
   if(h==="home") return{phase:"workspace",page:"home",homeTab:"dashboard",appId:null};
   /* App detail route: #app/:appId */
   if(h.startsWith("app/")){const aId=h.slice(4);return{phase:"workspace",page:"catalog",homeTab:"dashboard",appId:aId};}
-  const validPages=["builder","connect","connectors","goals","people","catalog"];
+  const validPages=["builder","connect","connectors","goals","score","people","catalog"];
   if(validPages.includes(h)) return{phase:"workspace",page:h,homeTab:"dashboard",appId:null};
   return{phase:"workspace",page:"home",homeTab:"dashboard",appId:null};
 }
@@ -7707,6 +8723,8 @@ function App(){
   const[fromChatOnboarding,setFromChatOnboarding]=useState(false);
   const[wipeIn,setWipeIn]=useState(false);
   const[appDetailId,setAppDetailId]=useState(initRoute.appId);
+  const[scorePage,setScorePage]=useState("dashboard");
+  const[selectedGoalId,setSelectedGoalId]=useState(null);
   const toggleSidebar=useCallback(()=>setSidebarMode(m=>m==="expanded"?"collapsed":"expanded"),[]);
 
   /* ── Sync hash → state on popstate/hashchange ── */
@@ -7769,6 +8787,7 @@ function App(){
   const isConnect=page==="connect";
   const isConnectors=page==="connectors";
   const isGoals=page==="goals";
+  const isScore=page==="score";
   const isPeople=page==="people";
   const isCatalog=page==="catalog"&&!appDetailId;
   const isAppDetail=page==="catalog"&&!!appDetailId;
@@ -7871,7 +8890,7 @@ function App(){
               <div className="tb-icon">{IC.undo(T.textSecondary)}</div>
               <div className="tb-icon">{IC.redo(T.textSecondary)}</div>
             </div>
-          </>:<span style={{fontFamily:T.serif,fontSize:17,fontWeight:500,letterSpacing:"-0.02em"}}>{isConnect?"Workspace Setup":isConnectors?"Connectors":isGoals?"Goals":isPeople?"People":isAppDetail?(APP_CATALOG.find(a=>a.id===appDetailId)||{}).name||"App":isCatalog?"Catalog":"Home"}</span>}
+          </>:<span style={{fontFamily:T.serif,fontSize:17,fontWeight:500,letterSpacing:"-0.02em"}}>{isConnect?"Workspace Setup":isConnectors?"Connectors":isGoals?"Goals":isScore?"Goal Score":isPeople?"People":isAppDetail?(APP_CATALOG.find(a=>a.id===appDetailId)||{}).name||"App":isCatalog?"Catalog":"Home"}</span>}
         </div>
         {/* Center area */}
         {isBuilder&&<div style={{position:"absolute",left:"50%",transform:"translateX(-50%)"}}>
@@ -7881,7 +8900,7 @@ function App(){
         </div>}
         {/* Right area */}
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          {!isBuilder&&<div className="score-btn" onClick={()=>navigate("connect")}>
+          {!isBuilder&&<div className="score-btn" onClick={()=>{navigate("score");setScorePage("dashboard");}}>
             <StarRating score={computeAggregateScore(selectedGoals).score} size={16} gap={2}/>
             <span style={{fontSize:12,fontWeight:600,color:"#B8962E",fontFamily:T.mono}}>{computeAggregateScore(selectedGoals).score}</span>
           </div>}
@@ -7901,6 +8920,20 @@ function App(){
       {page==="people"&&<PeoplePage/>}
       {page==="catalog"&&!appDetailId&&<CatalogPage installedApps={installedApps} setInstalledApps={setInstalledApps} onNavigate={(target)=>{if(APP_CATALOG.find(a=>a.id===target)){setAppDetailId(target);window.location.hash="#app/"+target;}else{navigate(target);}}} industry={onboardIndustry} addedConnectors={addedConnectors}/>}
       {page==="catalog"&&appDetailId&&<AppDetailPage appId={appDetailId} industry={onboardIndustry} addedConnectors={addedConnectors} onBack={()=>{setAppDetailId(null);window.location.hash="#catalog";}} onNavigate={navigate}/>}
+      {page==="score"&&(
+        scorePage==="detail"&&selectedGoalId
+          ?<GoalDetail goalId={selectedGoalId} industry={onboardIndustry} onBack={()=>setScorePage("dashboard")} onNavigate={(sub)=>{setScorePage(sub);}}/>
+          :scorePage==="simulator"
+          ?<GoalSimulator industry={onboardIndustry} selectedGoals={selectedGoals} onBack={()=>setScorePage("dashboard")}/>
+          :scorePage==="benchmarks"
+          ?<GoalBenchmarks industry={onboardIndustry} selectedGoals={selectedGoals} onBack={()=>setScorePage("dashboard")}/>
+          :scorePage==="portfolio"
+          ?<GoalPortfolio industry={onboardIndustry} selectedGoals={selectedGoals} onBack={()=>setScorePage("dashboard")}/>
+          :<GoalDashboard industry={onboardIndustry} selectedGoals={selectedGoals}
+            onNavigate={(sub)=>{setScorePage(sub);}}
+            onSelectGoal={(id)=>{setSelectedGoalId(id);setScorePage("detail");}}
+          />
+      )}
     </div>
   </>;
 }
