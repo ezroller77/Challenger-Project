@@ -20,7 +20,18 @@ const PERSONA_DESCS={
 };
 
 function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setFocusGoalName}){
-  const[messages,setMessages]=useState([]);
+  const[messages,setMessages]=useState([
+    {id:"ai-pre-1",role:"ai",parts:[
+      {type:"text",content:"Hey! I'm your setup assistant. I'll help get your workspace configured in about a minute."},
+      {type:"text",content:"First \u2014 what's your name and company?"},
+    ]},
+    {id:"u-pre-1",role:"user",text:"Michael, RC Marine Ops"},
+    {id:"card-pre",role:"company-card",name:"Michael",company:"RC Marine Ops",website:"rcmarineops.com",logo:"/RCMarineLogo.png"},
+    {id:"ai-pre-2",role:"ai",parts:[
+      {type:"text",content:"Is that right?"},
+    ]},
+    {id:"u-pre-2",role:"user",text:"That's correct"},
+  ]);
   const[step,setStep]=useState("intro");
   const[typing,setTyping]=useState(false);
   const[chosenIndustry,setChosenIndustry]=useState(null);
@@ -29,6 +40,7 @@ function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setF
   const[chosenFocus,setChosenFocus]=useState(null);
   const[chosenInterest,setChosenInterest]=useState(null);
   const endRef=useRef(null);
+  const initRef=useRef(false);
 
   const scrollBottom=()=>{setTimeout(()=>{if(endRef.current)endRef.current.scrollIntoView({behavior:"smooth"});},60);};
 
@@ -37,7 +49,7 @@ function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setF
     setTyping(true);scrollBottom();
     setTimeout(()=>{
       setTyping(false);
-      setMessages(prev=>[...prev,{id:`ai-${Date.now()}`,role:"ai",parts}]);
+      setMessages(prev=>[...prev,{id:`ai-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,role:"ai",parts}]);
       if(nextStep)setStep(nextStep);
       scrollBottom();
     },delay);
@@ -49,11 +61,13 @@ function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setF
     scrollBottom();
   };
 
-  /* ── Kick off intro ── */
+  /* ── Kick off with industry question (after pre-loaded name/company exchange) ── */
   useEffect(()=>{
+    if(initRef.current)return;
+    initRef.current=true;
     addAI([
-      {type:"text",content:"Hey! I'm your setup assistant. I'll help get your workspace configured in about a minute."},
-      {type:"text",content:"Let's start \u2014 what industry are you in?"},
+      {type:"text",content:"Great, nice to meet you Michael! Let's get RC Marine Ops set up."},
+      {type:"text",content:"What industry are you in?"},
       {type:"options",key:"industry",options:INDUSTRIES.map(ind=>({
         id:ind.id,label:ind.label,sub:ind.desc,color:ind.color,
       }))},
@@ -334,6 +348,25 @@ function ChatOnboarding({onComplete,setIndustry,setPersona,setSelectedGoals,setF
             if(msg.role==="user"){
               return<div key={msg.id} className="cob-user">
                 <div className="cob-user-bubble">{msg.text}</div>
+              </div>;
+            }
+            if(msg.role==="company-card"){
+              return<div key={msg.id} style={{animation:"fadeInUp 0.4s cubic-bezier(0.4,0,0.2,1)",maxWidth:380,width:"100%",alignSelf:"center"}}>
+                <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:20,padding:"22px 22px 18px",boxShadow:"0 4px 24px rgba(28,25,23,0.08), 0 1px 4px rgba(28,25,23,0.04)",overflow:"hidden",position:"relative"}}>
+                  <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:`linear-gradient(90deg, ${T.accent}, ${T.green})`}}/>
+                  <div style={{display:"flex",alignItems:"center",gap:16,marginTop:4}}>
+                    <img src={msg.logo} alt={msg.company} style={{width:52,height:52,borderRadius:14,objectFit:"cover",border:`1px solid ${T.border}`,flexShrink:0}}/>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:11,fontFamily:T.mono,color:T.textTertiary,textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:3}}>Company found</div>
+                      <div style={{fontSize:16,fontWeight:600,letterSpacing:"-0.02em",fontFamily:T.serif}}>{msg.company}</div>
+                      <div style={{fontSize:11.5,color:T.textTertiary,fontFamily:T.mono,marginTop:2}}>{msg.website}</div>
+                    </div>
+                  </div>
+                  <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${T.borderSubtle}`,display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{fontSize:14.5,fontWeight:500,letterSpacing:"-0.01em"}}>Hi, {msg.name}!</div>
+                    <div style={{fontSize:13,color:T.textTertiary}}>Welcome to Flows</div>
+                  </div>
+                </div>
               </div>;
             }
             return<div key={msg.id} className="cob-ai">
