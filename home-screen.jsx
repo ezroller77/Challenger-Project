@@ -674,7 +674,7 @@ const APP_CATALOG=[
     id:"quality-mgmt",name:"Quality Management",
     description:"Inspection checklists, defect tracking, supplier receiving, and audit workflows",
     color:T.violet,category:"Quality",industry:"manufacturing",
-    goalIds:["mfg-defects","mfg-regulatory","mfg-customer-complaints","mfg-supplier-quality","mfg-raw-inventory"],
+    goalIds:["mfg-defects"],
     workflows:[
       {id:"wf-quality-audit",name:"Quality Inspection Checklist",desc:"Daily quality audit process",steps:12},
       {id:"wf-supplier-receiving",name:"Supplier Receiving Inspection",desc:"Incoming material QC",steps:6},
@@ -688,7 +688,7 @@ const APP_CATALOG=[
     id:"safety-compliance",name:"Safety & Compliance",
     description:"Incident reporting, safety audits, and regulatory tracking",
     color:T.rose,category:"Compliance",industry:"manufacturing",
-    goalIds:["mfg-injuries","mfg-regulatory"],
+    goalIds:["mfg-injuries"],
     workflows:[
       {id:"wf-incident-report",name:"Incident Reporting Flow",desc:"Safety event documentation",steps:10},
     ],
@@ -701,7 +701,7 @@ const APP_CATALOG=[
     id:"mfg-maintenance",name:"Maintenance Manager",
     description:"Preventive maintenance, work orders, and asset health tracking",
     color:T.highlight,category:"Maintenance",industry:"manufacturing",
-    goalIds:["mfg-downtime","mfg-preventive-maintenance"],
+    goalIds:["mfg-downtime"],
     workflows:[
       {id:"wf-pm-schedule",name:"Preventive Maintenance Routine",desc:"Scheduled equipment PM",steps:10},
     ],
@@ -714,7 +714,7 @@ const APP_CATALOG=[
     id:"mfg-shift-mgmt",name:"Shift Management",
     description:"Handover processes, changeover procedures, and crew scheduling",
     color:T.amber,category:"Operations",industry:"manufacturing",
-    goalIds:["mfg-throughput","mfg-scheduling","mfg-oee","mfg-changeover"],
+    goalIds:["mfg-throughput"],
     workflows:[
       {id:"wf-shift-handover",name:"Shift Handover Procedure",desc:"Structured shift transition",steps:8},
       {id:"wf-changeover",name:"Changeover Procedure",desc:"Line changeover checklist",steps:8},
@@ -728,7 +728,7 @@ const APP_CATALOG=[
     id:"production-ops",name:"Production Operations",
     description:"Production scheduling, OEE tracking, and capacity optimisation",
     color:T.green,category:"Operations",industry:"manufacturing",
-    goalIds:["mfg-oee","mfg-throughput","mfg-asset-utilization","mfg-cost-per-unit"],
+    goalIds:["mfg-oee"],
     workflows:[
       {id:"wf-daily-production",name:"Daily Production Review",desc:"OEE and throughput daily check",steps:8},
       {id:"wf-capacity-planning",name:"Capacity Planning Workflow",desc:"Weekly capacity and scheduling review",steps:6},
@@ -743,7 +743,7 @@ const APP_CATALOG=[
     id:"mfg-inventory-mgmt",name:"Inventory Management",
     description:"Raw material tracking, WIP reduction, and supply chain optimisation",
     color:T.amber,category:"Supply Chain",industry:"manufacturing",
-    goalIds:["mfg-raw-inventory","mfg-otif","mfg-wip","mfg-supply-resilience"],
+    goalIds:["mfg-raw-inventory"],
     workflows:[
       {id:"wf-inventory-count",name:"Inventory Cycle Count",desc:"Periodic inventory accuracy check",steps:7},
       {id:"wf-reorder-review",name:"Reorder Point Review",desc:"Weekly stock level and reorder assessment",steps:5},
@@ -757,7 +757,7 @@ const APP_CATALOG=[
     id:"mfg-training-ops",name:"Training & Onboarding",
     description:"Operator training modules, certification tracking, and skill assessments",
     color:T.pink,category:"People",industry:"manufacturing",
-    goalIds:["mfg-training","mfg-turnover"],
+    goalIds:["mfg-training"],
     workflows:[
       {id:"wf-operator-training",name:"Operator Certification Flow",desc:"Equipment-specific training and sign-off",steps:10},
       {id:"wf-new-hire-onboarding",name:"New Hire Onboarding",desc:"Manufacturing onboarding checklist",steps:12},
@@ -773,7 +773,7 @@ const APP_CATALOG=[
     id:"food-safety",name:"Food Safety",
     description:"HACCP compliance, temperature logs, and inspection workflows",
     color:T.green,category:"Compliance",industry:"qsr",
-    goalIds:["qsr-food-safety","qsr-food-quality","qsr-audit-scores"],
+    goalIds:["qsr-food-safety"],
     workflows:[
       {id:"wf-opening-checklist",name:"Opening Checklist",desc:"Store opening procedure",steps:14},
       {id:"wf-temp-log",name:"Temperature Logging",desc:"Hourly temp compliance",steps:6},
@@ -787,7 +787,7 @@ const APP_CATALOG=[
     id:"qsr-shift-mgmt",name:"Shift Management",
     description:"Line checks, station positioning, and crew scheduling",
     color:T.amber,category:"Operations",industry:"qsr",
-    goalIds:["qsr-speed","qsr-accuracy","qsr-labor-cost"],
+    goalIds:["qsr-speed"],
     workflows:[
       {id:"wf-line-check",name:"Line Check & Positioning",desc:"Station setup for daypart",steps:8},
     ],
@@ -800,7 +800,7 @@ const APP_CATALOG=[
     id:"qsr-inventory-mgmt",name:"Inventory Management",
     description:"Waste tracking, food cost control, and stock management",
     color:T.amber,category:"Supply Chain",industry:"qsr",
-    goalIds:["qsr-waste","qsr-food-cost","qsr-inventory"],
+    goalIds:["qsr-waste"],
     workflows:[
       {id:"wf-waste-tracking",name:"Waste & Discard Tracking",desc:"End-of-day waste log",steps:5},
     ],
@@ -813,7 +813,7 @@ const APP_CATALOG=[
     id:"qsr-training-ops",name:"Training & Onboarding",
     description:"New crew onboarding, certification tracking, and skill development",
     color:T.pink,category:"People",industry:"qsr",
-    goalIds:["qsr-training","qsr-retention"],
+    goalIds:["qsr-training"],
     workflows:[
       {id:"wf-crew-training",name:"New Crew Onboarding",desc:"Training flow for new hire",steps:12},
     ],
@@ -826,7 +826,7 @@ const APP_CATALOG=[
     id:"delivery-ops",name:"Delivery Operations",
     description:"Third-party delivery handoff, digital order management, and accuracy tracking",
     color:T.highlight,category:"Operations",industry:"qsr",
-    goalIds:["qsr-delivery","qsr-accuracy","qsr-digital"],
+    goalIds:["qsr-delivery"],
     workflows:[
       {id:"wf-delivery-handoff",name:"Delivery Order Handoff",desc:"3rd-party delivery QC",steps:6},
     ],
@@ -839,7 +839,7 @@ const APP_CATALOG=[
     id:"restaurant-ops",name:"Restaurant Operations",
     description:"Drive-thru optimisation, kitchen management, and service speed tracking",
     color:T.rose,category:"Operations",industry:"qsr",
-    goalIds:["qsr-drive-thru","qsr-kitchen","qsr-speed"],
+    goalIds:["qsr-drive-thru"],
     workflows:[
       {id:"wf-drive-thru-check",name:"Drive-Thru Performance Check",desc:"Hourly speed and accuracy review",steps:6},
       {id:"wf-kitchen-flow",name:"Kitchen Order Flow Review",desc:"Channel balancing and ticket time audit",steps:5},
@@ -856,7 +856,7 @@ const APP_CATALOG=[
     id:"fleet-ops",name:"Fleet Operations",
     description:"Vehicle inspections, driver management, fuel audits, and route compliance",
     color:T.highlight,category:"Operations",industry:"transport-logistics",
-    goalIds:["tl-vehicle-uptime","tl-driver-safety","tl-hos","tl-fuel","tl-cost-per-mile","tl-driver-retention"],
+    goalIds:["tl-vehicle-uptime"],
     workflows:[
       {id:"wf-pre-trip",name:"Pre-Trip Inspection",desc:"DOT pre-trip checklist",steps:16},
       {id:"wf-fuel-audit",name:"Fuel Card Reconciliation",desc:"Weekly fuel spend audit",steps:6},
@@ -872,7 +872,7 @@ const APP_CATALOG=[
     id:"dock-ops",name:"Dock Operations",
     description:"Dock receiving, check-in, cross-dock efficiency, and dwell time management",
     color:T.amber,category:"Operations",industry:"transport-logistics",
-    goalIds:["tl-dock-throughput","tl-dwell","tl-accuracy-damage","tl-cross-dock"],
+    goalIds:["tl-dock-throughput"],
     workflows:[
       {id:"wf-dock-receiving",name:"Dock Receiving & Check-in",desc:"Inbound trailer processing",steps:8},
     ],
@@ -885,7 +885,7 @@ const APP_CATALOG=[
     id:"delivery-tracking",name:"Delivery Tracking",
     description:"POD capture, exception handling, and real-time shipment visibility",
     color:T.green,category:"Operations",industry:"transport-logistics",
-    goalIds:["tl-pod","tl-otd","tl-visibility","tl-exceptions","tl-eta"],
+    goalIds:["tl-otd"],
     workflows:[
       {id:"wf-pod-capture",name:"Proof of Delivery Capture",desc:"Electronic POD workflow",steps:5},
       {id:"wf-exception-mgmt",name:"Exception Handling",desc:"Delay/damage escalation",steps:8},
@@ -899,7 +899,7 @@ const APP_CATALOG=[
     id:"route-ops",name:"Route Optimisation",
     description:"Route planning, empty mile reduction, and load optimisation",
     color:T.violet,category:"Operations",industry:"transport-logistics",
-    goalIds:["tl-route-efficiency","tl-deadhead","tl-cube-utilization"],
+    goalIds:["tl-route-efficiency"],
     workflows:[
       {id:"wf-route-review",name:"Daily Route Review",desc:"Planned vs actual route analysis",steps:6},
       {id:"wf-load-planning",name:"Load Planning Check",desc:"Cube and weight utilisation review",steps:5},
@@ -946,6 +946,194 @@ const getConnectorById=(cId)=>{
   const cat=CONNECTOR_CATALOG.find(c=>c.id===cId);
   if(cat)return{id:cat.id,name:cat.label,desc:cat.connectors[0]?.desc||"",category:cat.label,categoryColor:cat.color,isCategory:true};
   return null;
+};
+
+/* ═══ APP AGENT INSIGHTS ═══ */
+/* Each app has a named AI agent that proactively surfaces insights */
+const APP_AGENT_INSIGHTS={
+  /* Manufacturing */
+  "quality-mgmt":{
+    agent:"Quality Agent",
+    status:"active",
+    lastRun:"12 min ago",
+    insights:[
+      {type:"alert",title:"Defect spike on Line 3",desc:"First-pass yield dropped 4.2% in the last shift. Root cause appears linked to the bearing replacement on Station 7.",severity:"high",time:"11 min ago"},
+      {type:"trend",title:"Supplier quality improving",desc:"Incoming material rejection rate down 18% over 30 days. Top 3 suppliers all above 98% acceptance.",severity:"positive",time:"2 hrs ago"},
+      {type:"recommendation",title:"Schedule audit for Line 1",desc:"Line 1 hasn't had a quality audit in 14 days. Based on historical patterns, scheduling one this week could prevent a compliance gap.",severity:"medium",time:"4 hrs ago"},
+    ],
+  },
+  "safety-compliance":{
+    agent:"Safety Agent",
+    status:"active",
+    lastRun:"8 min ago",
+    insights:[
+      {type:"alert",title:"Near-miss cluster in Zone B",desc:"3 near-miss reports filed in Zone B this week — 2x the monthly average. Recommend a safety walk-through.",severity:"high",time:"25 min ago"},
+      {type:"trend",title:"TRIR trending down",desc:"Total Recordable Incident Rate has decreased 22% quarter-over-quarter. EHS training completion correlates strongly.",severity:"positive",time:"1 hr ago"},
+      {type:"recommendation",title:"Update lockout/tagout procedure",desc:"Procedure LOTO-04 hasn't been reviewed in 11 months. Regulatory best practice is every 6 months.",severity:"medium",time:"3 hrs ago"},
+    ],
+  },
+  "mfg-maintenance":{
+    agent:"Maintenance Agent",
+    status:"active",
+    lastRun:"5 min ago",
+    insights:[
+      {type:"alert",title:"Bearing temp anomaly — CNC-07",desc:"Temperature readings 12°C above baseline on CNC-07 spindle bearing. Failure probability: 34% within 72 hours.",severity:"high",time:"5 min ago"},
+      {type:"trend",title:"PM compliance at 94%",desc:"Preventive maintenance completion rate improved from 87% to 94% over the last 60 days.",severity:"positive",time:"1 hr ago"},
+      {type:"recommendation",title:"Reorder spare filter kits",desc:"Filter kit inventory will hit zero in ~8 days based on current usage. Lead time is 5 business days.",severity:"medium",time:"2 hrs ago"},
+    ],
+  },
+  "mfg-shift-mgmt":{
+    agent:"Shift Agent",
+    status:"active",
+    lastRun:"18 min ago",
+    insights:[
+      {type:"alert",title:"Overtime trending above budget",desc:"Week-to-date overtime is at 112% of budget. Night shift is the primary driver.",severity:"high",time:"18 min ago"},
+      {type:"trend",title:"Changeover time reduced",desc:"Average changeover time down 11 min (from 42 to 31 min) since new procedure was implemented.",severity:"positive",time:"3 hrs ago"},
+      {type:"recommendation",title:"Rebalance crew allocation",desc:"Day shift is overstaffed by 2 operators vs demand. Suggest reassigning to evening shift which is short.",severity:"medium",time:"5 hrs ago"},
+    ],
+  },
+  "production-ops":{
+    agent:"Production Agent",
+    status:"active",
+    lastRun:"3 min ago",
+    insights:[
+      {type:"alert",title:"OEE below target on Line 2",desc:"Line 2 OEE at 71% vs 85% target. Availability is the constraint — 3 unplanned stops in the last 4 hours.",severity:"high",time:"3 min ago"},
+      {type:"trend",title:"Throughput up 6% this week",desc:"Overall throughput increased 6% week-over-week. Line 1 and Line 4 are the top contributors.",severity:"positive",time:"1 hr ago"},
+      {type:"recommendation",title:"Review scheduling algorithm",desc:"Current scheduling creates 23% idle time between runs. Optimising job sequencing could recover ~45 min/shift.",severity:"medium",time:"4 hrs ago"},
+    ],
+  },
+  "mfg-inventory-mgmt":{
+    agent:"Inventory Agent",
+    status:"active",
+    lastRun:"22 min ago",
+    insights:[
+      {type:"alert",title:"Raw material stockout risk",desc:"Aluminium billet stock will fall below safety threshold in 3 days. Supplier lead time is 5 days.",severity:"high",time:"22 min ago"},
+      {type:"trend",title:"WIP inventory declining",desc:"Work-in-progress value decreased 15% over 30 days, freeing $42k in working capital.",severity:"positive",time:"2 hrs ago"},
+      {type:"recommendation",title:"Consolidate reorder points",desc:"5 SKUs have overlapping reorder windows. Consolidating orders could save ~$2,800 in freight costs.",severity:"medium",time:"6 hrs ago"},
+    ],
+  },
+  "mfg-training-ops":{
+    agent:"Training Agent",
+    status:"active",
+    lastRun:"45 min ago",
+    insights:[
+      {type:"alert",title:"3 certifications expiring this week",desc:"CNC operation certs for M. Torres, K. Singh, and R. Patel expire within 7 days. Training slots available Thursday.",severity:"high",time:"45 min ago"},
+      {type:"trend",title:"Onboarding time reduced",desc:"Average time-to-proficiency for new operators down from 18 to 14 days since updated training modules.",severity:"positive",time:"3 hrs ago"},
+      {type:"recommendation",title:"Cross-train Line 2 operators",desc:"Line 2 has single-operator dependency on 3 stations. Cross-training reduces production risk.",severity:"medium",time:"5 hrs ago"},
+    ],
+  },
+  /* QSR */
+  "food-safety":{
+    agent:"Food Safety Agent",
+    status:"active",
+    lastRun:"6 min ago",
+    insights:[
+      {type:"alert",title:"Walk-in cooler temp variance",desc:"Unit 2 walk-in recorded 42°F at 6:15am — above the 40°F threshold. Returned to range by 6:28am but needs investigation.",severity:"high",time:"6 min ago"},
+      {type:"trend",title:"Audit scores improving",desc:"Rolling 30-day food safety audit score is 96.2, up from 93.1 last month. Opening checklist compliance is the key driver.",severity:"positive",time:"1 hr ago"},
+      {type:"recommendation",title:"Add midday temp check",desc:"Historical data shows 2pm-4pm is the highest risk window for temp excursions. Adding a scheduled check could prevent 60% of violations.",severity:"medium",time:"3 hrs ago"},
+    ],
+  },
+  "qsr-shift-mgmt":{
+    agent:"Shift Agent",
+    status:"active",
+    lastRun:"14 min ago",
+    insights:[
+      {type:"alert",title:"Drive-thru speed above target",desc:"Average service time hit 4:12 during lunch rush vs 3:30 target. Station 2 bottleneck identified.",severity:"high",time:"14 min ago"},
+      {type:"trend",title:"Order accuracy at 98.4%",desc:"Accuracy rate up 1.2% since new line check procedure was introduced 3 weeks ago.",severity:"positive",time:"2 hrs ago"},
+      {type:"recommendation",title:"Adjust staffing for Friday peak",desc:"Last 4 Fridays showed 22% higher volume than scheduled labour. Suggest adding 2 crew for 11am-2pm.",severity:"medium",time:"4 hrs ago"},
+    ],
+  },
+  "qsr-inventory-mgmt":{
+    agent:"Inventory Agent",
+    status:"active",
+    lastRun:"30 min ago",
+    insights:[
+      {type:"alert",title:"Waste above threshold",desc:"Yesterday's waste was 4.8% of food cost vs 3.5% target. Fry station discards were the main contributor.",severity:"high",time:"30 min ago"},
+      {type:"trend",title:"Food cost trending down",desc:"Theoretical vs actual food cost gap narrowed from 2.1% to 1.4% over 30 days.",severity:"positive",time:"2 hrs ago"},
+      {type:"recommendation",title:"Review batch sizes at fry station",desc:"Reducing batch size by 20% during off-peak could cut fry waste by ~35% without impacting speed.",severity:"medium",time:"5 hrs ago"},
+    ],
+  },
+  "qsr-training-ops":{
+    agent:"Training Agent",
+    status:"active",
+    lastRun:"1 hr ago",
+    insights:[
+      {type:"alert",title:"New hire behind on training",desc:"J. Martinez (started 5 days ago) has only completed 2 of 6 required modules. Target is 4 by day 5.",severity:"high",time:"1 hr ago"},
+      {type:"trend",title:"Retention improving",desc:"90-day retention rate up to 78% from 64% since structured onboarding was introduced.",severity:"positive",time:"3 hrs ago"},
+      {type:"recommendation",title:"Schedule food safety refresher",desc:"8 crew members are due for annual food safety refresher within 30 days.",severity:"medium",time:"4 hrs ago"},
+    ],
+  },
+  "delivery-ops":{
+    agent:"Delivery Agent",
+    status:"active",
+    lastRun:"10 min ago",
+    insights:[
+      {type:"alert",title:"DoorDash error rate spiking",desc:"Order error rate for DoorDash jumped to 6.2% today vs 2.8% average. Packaging label mismatches are the cause.",severity:"high",time:"10 min ago"},
+      {type:"trend",title:"Delivery volume up 14%",desc:"Third-party delivery orders are up 14% month-over-month. Uber Eats now accounts for 42% of delivery volume.",severity:"positive",time:"2 hrs ago"},
+      {type:"recommendation",title:"Add delivery staging area",desc:"Current handoff area causes congestion during peak. A dedicated staging shelf could reduce driver wait time by ~3 min.",severity:"medium",time:"6 hrs ago"},
+    ],
+  },
+  "restaurant-ops":{
+    agent:"Restaurant Agent",
+    status:"active",
+    lastRun:"8 min ago",
+    insights:[
+      {type:"alert",title:"Kitchen ticket time above 6 min",desc:"Average ticket time hit 6:24 during 12-1pm. Grill station was the bottleneck — 2 orders backed up.",severity:"high",time:"8 min ago"},
+      {type:"trend",title:"Drive-thru cars per hour improving",desc:"Average cars/hour up from 28 to 31 over the last 2 weeks. New positioning guide is working.",severity:"positive",time:"1 hr ago"},
+      {type:"recommendation",title:"Enable order throttling",desc:"When kitchen queue exceeds 8 tickets, auto-throttling delivery orders could prevent quality drops.",severity:"medium",time:"3 hrs ago"},
+    ],
+  },
+  /* Transport & Logistics */
+  "fleet-ops":{
+    agent:"Fleet Agent",
+    status:"active",
+    lastRun:"4 min ago",
+    insights:[
+      {type:"alert",title:"Unit 4472 brake inspection overdue",desc:"Pre-trip inspection flagged soft brake pedal. Vehicle should be taken out of service for inspection.",severity:"high",time:"4 min ago"},
+      {type:"trend",title:"Fleet uptime at 96.2%",desc:"Vehicle uptime improved from 93.8% to 96.2% since predictive maintenance was enabled.",severity:"positive",time:"1 hr ago"},
+      {type:"recommendation",title:"Rotate tyre sets on 6 units",desc:"Tread depth analysis shows 6 units approaching minimum. Rotating now extends life by ~15,000 miles.",severity:"medium",time:"3 hrs ago"},
+    ],
+  },
+  "dock-ops":{
+    agent:"Dock Agent",
+    status:"active",
+    lastRun:"15 min ago",
+    insights:[
+      {type:"alert",title:"Dock 3 dwell time at 4.2 hrs",desc:"Trailer at Dock 3 has been waiting 4.2 hours — 2.5x the average. Driver is past their appointment window.",severity:"high",time:"15 min ago"},
+      {type:"trend",title:"Throughput up 8% this week",desc:"Loads processed per door increased from 12.4 to 13.4 daily average.",severity:"positive",time:"2 hrs ago"},
+      {type:"recommendation",title:"Stagger appointment windows",desc:"Current 30-min windows create bunching at 8am and 1pm. 15-min stagger could reduce peak wait by 40%.",severity:"medium",time:"4 hrs ago"},
+    ],
+  },
+  "delivery-tracking":{
+    agent:"Delivery Agent",
+    status:"active",
+    lastRun:"7 min ago",
+    insights:[
+      {type:"alert",title:"3 shipments with ETA risk",desc:"Orders #4891, #4903, #4912 are projected to miss delivery windows. Weather delay on I-95 corridor.",severity:"high",time:"7 min ago"},
+      {type:"trend",title:"On-time delivery at 94.6%",desc:"OTD rate improved 1.8% month-over-month. POD capture compliance is now at 99.1%.",severity:"positive",time:"1 hr ago"},
+      {type:"recommendation",title:"Proactively notify customer",desc:"3 at-risk shipments should trigger proactive ETA updates to customers before they escalate.",severity:"medium",time:"2 hrs ago"},
+    ],
+  },
+  "route-ops":{
+    agent:"Route Agent",
+    status:"active",
+    lastRun:"20 min ago",
+    insights:[
+      {type:"alert",title:"Deadhead ratio above 18%",desc:"Empty miles hit 18.3% this week vs 14% target. Northeast corridor is the main driver.",severity:"high",time:"20 min ago"},
+      {type:"trend",title:"Cube utilisation improving",desc:"Average trailer cube utilisation up from 76% to 82% since load planning optimisation was enabled.",severity:"positive",time:"2 hrs ago"},
+      {type:"recommendation",title:"Consolidate NE corridor runs",desc:"Combining 3 partial loads on the NE corridor into 2 full loads could save ~$1,200/week in fuel.",severity:"medium",time:"5 hrs ago"},
+    ],
+  },
+  "tl-inventory-mgmt":{
+    agent:"Warehouse Agent",
+    status:"active",
+    lastRun:"35 min ago",
+    insights:[
+      {type:"alert",title:"Pick accuracy below target",desc:"Pick accuracy at 97.8% vs 99.5% target. Zone C is responsible for 60% of errors — mislabelled bins.",severity:"high",time:"35 min ago"},
+      {type:"trend",title:"Order cycle time reduced",desc:"Average order cycle time decreased from 2.4 hrs to 1.9 hrs over 30 days.",severity:"positive",time:"2 hrs ago"},
+      {type:"recommendation",title:"Re-slot Zone C bins",desc:"High-velocity SKUs in Zone C are in suboptimal positions. Re-slotting could reduce pick time by ~20%.",severity:"medium",time:"4 hrs ago"},
+    ],
+  },
 };
 
 /* ═══ CONNECTOR ICONS ═══ */
@@ -7238,10 +7426,9 @@ function AppDetailPage({appId,industry,addedConnectors,onBack,onNavigate}){
           </div>
         </div>
 
-        {/* Goal pills */}
+        {/* Goal pill (1:1 app→goal) */}
         {appGoals.length>0&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          {appGoals.slice(0,6).map(g=><span key={g.id} style={{fontFamily:T.sans,fontSize:10.5,fontWeight:500,color:app.color,background:app.color+"20",border:`1px solid ${app.color}30`,padding:"3px 10px",borderRadius:20,whiteSpace:"nowrap"}}>{IC.target(app.color,10)} {g.name}</span>)}
-          {appGoals.length>6&&<span style={{fontFamily:T.mono,fontSize:10,color:"rgba(255,255,255,0.4)",padding:"3px 8px"}}>+{appGoals.length-6} more</span>}
+          <span style={{fontFamily:T.sans,fontSize:10.5,fontWeight:500,color:app.color,background:app.color+"20",border:`1px solid ${app.color}30`,padding:"3px 10px",borderRadius:20,whiteSpace:"nowrap"}}>{IC.target(app.color,10)} {appGoals[0].name}</span>
         </div>}
       </div>
     </div>
@@ -7286,19 +7473,63 @@ function AppDetailPage({appId,industry,addedConnectors,onBack,onNavigate}){
           <AreaChart data={chartData} color={app.color} w={880} h={140}/>
         </div>
 
+        {/* ── Agent Insights ── */}
+        {(()=>{
+          const agentData=APP_AGENT_INSIGHTS[appId];
+          if(!agentData)return null;
+          const sevColor=(s)=>s==="high"?T.rose:s==="positive"?T.green:T.amber;
+          const sevSoft=(s)=>s==="high"?T.roseSoft:s==="positive"?T.greenSoft:T.amberSoft;
+          const sevBorder=(s)=>s==="high"?T.roseBorder:s==="positive"?T.greenBorder:T.amberBorder;
+          const typeIcon=(t)=>t==="alert"?IC.bolt:t==="trend"?IC.chart:IC.sparkle;
+          const typeLabel=(t)=>t==="alert"?"Alert":t==="trend"?"Trend":"Recommendation";
+          return<div style={{marginBottom:28}}>
+            {/* Agent header */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:36,height:36,borderRadius:10,background:app.color+"18",border:`1px solid ${app.color}30`,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.sparkle(app.color,16)}</div>
+                <div>
+                  <div style={{fontFamily:T.sans,fontSize:14,fontWeight:600,color:T.text,letterSpacing:"-0.01em"}}>{agentData.agent}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:5,marginTop:2}}>
+                    <div style={{width:6,height:6,borderRadius:"50%",background:T.green,animation:"pulse 2s infinite"}}/>
+                    <span style={{fontSize:10.5,color:T.textTertiary,fontFamily:T.mono}}>Active · Updated {agentData.lastRun}</span>
+                  </div>
+                </div>
+              </div>
+              <div style={{padding:"7px 16px",borderRadius:99,background:app.color,color:"#fff",fontSize:11.5,fontWeight:600,fontFamily:T.sans,cursor:"pointer",display:"flex",alignItems:"center",gap:5,transition:"opacity 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.opacity="0.85";}} onMouseLeave={e=>{e.currentTarget.style.opacity="1";}}>{IC.sparkle("#fff",11)} Ask Agent</div>
+            </div>
+            {/* Insight cards */}
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {agentData.insights.map((ins,i)=>{
+                const ic=sevColor(ins.severity);const ics=sevSoft(ins.severity);const icb=sevBorder(ins.severity);
+                const TIcon=typeIcon(ins.type);
+                return<div key={i} className="bento" style={{padding:"16px 20px",borderLeft:`3px solid ${ic}`,animation:`fadeIn 0.3s ease ${i*0.08}s both`}}>
+                  <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+                    <div style={{width:32,height:32,borderRadius:8,background:ics,border:`1px solid ${icb}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>{TIcon(ic,14)}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                        <span style={{fontFamily:T.sans,fontSize:13,fontWeight:600,color:T.text,letterSpacing:"-0.01em"}}>{ins.title}</span>
+                        <span style={{fontSize:9,fontFamily:T.mono,padding:"2px 7px",borderRadius:99,background:ics,color:ic,fontWeight:600}}>{typeLabel(ins.type)}</span>
+                      </div>
+                      <div style={{fontFamily:T.sans,fontSize:12,color:T.textSecondary,lineHeight:1.55}}>{ins.desc}</div>
+                      <div style={{fontFamily:T.mono,fontSize:10,color:T.textTertiary,marginTop:6}}>{ins.time}</div>
+                    </div>
+                  </div>
+                </div>;
+              })}
+            </div>
+          </div>;
+        })()}
+
         {/* Connected goals + People row */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:28}}>
-          {/* Goals */}
+          {/* Goal (1:1) */}
           <div className="bento" style={{padding:"18px 20px"}}>
-            <div className="lbl" style={{marginBottom:12}}>{IC.target(T.textTertiary,12)} Connected Goals</div>
-            {appGoals.length===0?<div style={{fontSize:12,color:T.textTertiary}}>No goals linked</div>:
-            <div style={{display:"flex",flexDirection:"column",gap:6}}>
-              {appGoals.slice(0,5).map(g=><div key={g.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",borderRadius:T.rSm,background:T.surfaceHover,cursor:"pointer",transition:"background 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.background=T.surfaceMuted;}} onMouseLeave={e=>{e.currentTarget.style.background=T.surfaceHover;}} onClick={()=>onNavigate&&onNavigate("score")}>
-                <div style={{width:6,height:6,borderRadius:"50%",background:app.color,flexShrink:0}}/>
-                <span style={{fontFamily:T.sans,fontSize:12.5,color:T.text,flex:1}}>{g.name}</span>
-                {IC.chevRight(T.textTertiary,12)}
-              </div>)}
-              {appGoals.length>5&&<div style={{fontSize:11,color:T.textTertiary,paddingLeft:10}}>+{appGoals.length-5} more goals</div>}
+            <div className="lbl" style={{marginBottom:12}}>{IC.target(T.textTertiary,12)} Connected Goal</div>
+            {appGoals.length===0?<div style={{fontSize:12,color:T.textTertiary}}>No goal linked</div>:
+            <div onClick={()=>onNavigate&&onNavigate("score")} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderRadius:T.rSm,background:T.surfaceHover,cursor:"pointer",transition:"background 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.background=T.surfaceMuted;}} onMouseLeave={e=>{e.currentTarget.style.background=T.surfaceHover;}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:app.color,flexShrink:0}}/>
+              <span style={{fontFamily:T.sans,fontSize:13,fontWeight:500,color:T.text,flex:1}}>{appGoals[0].name}</span>
+              {IC.chevRight(T.textTertiary,14)}
             </div>}
           </div>
           {/* People */}
@@ -8298,6 +8529,20 @@ function ChatView({chatMessages,setChatMessages,pinnedWidgets,pinWidget,unpinWid
         </div>}
 
         <div ref={msgsEnd}/>
+      </div>
+    </div>
+
+    {/* ── Chat Insight CTA ── */}
+    <div style={{padding:"0 32px",flexShrink:0}}>
+      <div style={{...mw}}>
+        <div onClick={()=>{setInput("Give me an insight on today's operations");}} style={{padding:"14px 18px",borderRadius:T.r,background:`linear-gradient(135deg, ${T.accentSoft}, ${T.highlightSoft})`,border:`1px solid ${T.accentBorder}`,display:"flex",alignItems:"center",gap:14,cursor:"pointer",transition:"all 0.2s",marginBottom:6}} onMouseEnter={e=>{e.currentTarget.style.borderColor=T.accent;e.currentTarget.style.boxShadow=`0 4px 16px ${T.accent}15`;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=T.accentBorder;e.currentTarget.style.boxShadow="none";}}>
+          <div style={{width:36,height:36,borderRadius:10,background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 2px 8px rgba(28,25,23,0.1)"}}>{IC.sparkle("#fff",16)}</div>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:T.sans,fontSize:13,fontWeight:600,color:T.text,letterSpacing:"-0.01em"}}>Get today's insight</div>
+            <div style={{fontFamily:T.sans,fontSize:11.5,color:T.textSecondary,marginTop:1}}>AI will analyse activity, flag risks, and suggest next actions</div>
+          </div>
+          <div style={{padding:"7px 16px",borderRadius:99,background:T.accent,color:"#fff",fontSize:11.5,fontWeight:600,fontFamily:T.sans,flexShrink:0,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5}}>{IC.sparkle("#fff",10)} Ask</div>
+        </div>
       </div>
     </div>
 

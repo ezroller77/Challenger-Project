@@ -105,10 +105,9 @@ function AppDetailPage({appId,industry,addedConnectors,onBack,onNavigate}){
           </div>
         </div>
 
-        {/* Goal pills */}
+        {/* Goal pill (1:1 app→goal) */}
         {appGoals.length>0&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          {appGoals.slice(0,6).map(g=><span key={g.id} style={{fontFamily:T.sans,fontSize:10.5,fontWeight:500,color:app.color,background:app.color+"20",border:`1px solid ${app.color}30`,padding:"3px 10px",borderRadius:20,whiteSpace:"nowrap"}}>{IC.target(app.color,10)} {g.name}</span>)}
-          {appGoals.length>6&&<span style={{fontFamily:T.mono,fontSize:10,color:"rgba(255,255,255,0.4)",padding:"3px 8px"}}>+{appGoals.length-6} more</span>}
+          <span style={{fontFamily:T.sans,fontSize:10.5,fontWeight:500,color:app.color,background:app.color+"20",border:`1px solid ${app.color}30`,padding:"3px 10px",borderRadius:20,whiteSpace:"nowrap"}}>{IC.target(app.color,10)} {appGoals[0].name}</span>
         </div>}
       </div>
     </div>
@@ -153,19 +152,63 @@ function AppDetailPage({appId,industry,addedConnectors,onBack,onNavigate}){
           <AreaChart data={chartData} color={app.color} w={880} h={140}/>
         </div>
 
+        {/* ── Agent Insights ── */}
+        {(()=>{
+          const agentData=APP_AGENT_INSIGHTS[appId];
+          if(!agentData)return null;
+          const sevColor=(s)=>s==="high"?T.rose:s==="positive"?T.green:T.amber;
+          const sevSoft=(s)=>s==="high"?T.roseSoft:s==="positive"?T.greenSoft:T.amberSoft;
+          const sevBorder=(s)=>s==="high"?T.roseBorder:s==="positive"?T.greenBorder:T.amberBorder;
+          const typeIcon=(t)=>t==="alert"?IC.bolt:t==="trend"?IC.chart:IC.sparkle;
+          const typeLabel=(t)=>t==="alert"?"Alert":t==="trend"?"Trend":"Recommendation";
+          return<div style={{marginBottom:28}}>
+            {/* Agent header */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:36,height:36,borderRadius:10,background:app.color+"18",border:`1px solid ${app.color}30`,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.sparkle(app.color,16)}</div>
+                <div>
+                  <div style={{fontFamily:T.sans,fontSize:14,fontWeight:600,color:T.text,letterSpacing:"-0.01em"}}>{agentData.agent}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:5,marginTop:2}}>
+                    <div style={{width:6,height:6,borderRadius:"50%",background:T.green,animation:"pulse 2s infinite"}}/>
+                    <span style={{fontSize:10.5,color:T.textTertiary,fontFamily:T.mono}}>Active · Updated {agentData.lastRun}</span>
+                  </div>
+                </div>
+              </div>
+              <div style={{padding:"7px 16px",borderRadius:99,background:app.color,color:"#fff",fontSize:11.5,fontWeight:600,fontFamily:T.sans,cursor:"pointer",display:"flex",alignItems:"center",gap:5,transition:"opacity 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.opacity="0.85";}} onMouseLeave={e=>{e.currentTarget.style.opacity="1";}}>{IC.sparkle("#fff",11)} Ask Agent</div>
+            </div>
+            {/* Insight cards */}
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {agentData.insights.map((ins,i)=>{
+                const ic=sevColor(ins.severity);const ics=sevSoft(ins.severity);const icb=sevBorder(ins.severity);
+                const TIcon=typeIcon(ins.type);
+                return<div key={i} className="bento" style={{padding:"16px 20px",borderLeft:`3px solid ${ic}`,animation:`fadeIn 0.3s ease ${i*0.08}s both`}}>
+                  <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+                    <div style={{width:32,height:32,borderRadius:8,background:ics,border:`1px solid ${icb}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>{TIcon(ic,14)}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                        <span style={{fontFamily:T.sans,fontSize:13,fontWeight:600,color:T.text,letterSpacing:"-0.01em"}}>{ins.title}</span>
+                        <span style={{fontSize:9,fontFamily:T.mono,padding:"2px 7px",borderRadius:99,background:ics,color:ic,fontWeight:600}}>{typeLabel(ins.type)}</span>
+                      </div>
+                      <div style={{fontFamily:T.sans,fontSize:12,color:T.textSecondary,lineHeight:1.55}}>{ins.desc}</div>
+                      <div style={{fontFamily:T.mono,fontSize:10,color:T.textTertiary,marginTop:6}}>{ins.time}</div>
+                    </div>
+                  </div>
+                </div>;
+              })}
+            </div>
+          </div>;
+        })()}
+
         {/* Connected goals + People row */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:28}}>
-          {/* Goals */}
+          {/* Goal (1:1) */}
           <div className="bento" style={{padding:"18px 20px"}}>
-            <div className="lbl" style={{marginBottom:12}}>{IC.target(T.textTertiary,12)} Connected Goals</div>
-            {appGoals.length===0?<div style={{fontSize:12,color:T.textTertiary}}>No goals linked</div>:
-            <div style={{display:"flex",flexDirection:"column",gap:6}}>
-              {appGoals.slice(0,5).map(g=><div key={g.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",borderRadius:T.rSm,background:T.surfaceHover,cursor:"pointer",transition:"background 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.background=T.surfaceMuted;}} onMouseLeave={e=>{e.currentTarget.style.background=T.surfaceHover;}} onClick={()=>onNavigate&&onNavigate("score")}>
-                <div style={{width:6,height:6,borderRadius:"50%",background:app.color,flexShrink:0}}/>
-                <span style={{fontFamily:T.sans,fontSize:12.5,color:T.text,flex:1}}>{g.name}</span>
-                {IC.chevRight(T.textTertiary,12)}
-              </div>)}
-              {appGoals.length>5&&<div style={{fontSize:11,color:T.textTertiary,paddingLeft:10}}>+{appGoals.length-5} more goals</div>}
+            <div className="lbl" style={{marginBottom:12}}>{IC.target(T.textTertiary,12)} Connected Goal</div>
+            {appGoals.length===0?<div style={{fontSize:12,color:T.textTertiary}}>No goal linked</div>:
+            <div onClick={()=>onNavigate&&onNavigate("score")} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderRadius:T.rSm,background:T.surfaceHover,cursor:"pointer",transition:"background 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.background=T.surfaceMuted;}} onMouseLeave={e=>{e.currentTarget.style.background=T.surfaceHover;}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:app.color,flexShrink:0}}/>
+              <span style={{fontFamily:T.sans,fontSize:13,fontWeight:500,color:T.text,flex:1}}>{appGoals[0].name}</span>
+              {IC.chevRight(T.textTertiary,14)}
             </div>}
           </div>
           {/* People */}

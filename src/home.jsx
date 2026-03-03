@@ -461,6 +461,20 @@ function ChatView({chatMessages,setChatMessages,pinnedWidgets,pinWidget,unpinWid
       </div>
     </div>
 
+    {/* ── Chat Insight CTA ── */}
+    <div style={{padding:"0 32px",flexShrink:0}}>
+      <div style={{...mw}}>
+        <div onClick={()=>{setInput("Give me an insight on today's operations");}} style={{padding:"14px 18px",borderRadius:T.r,background:`linear-gradient(135deg, ${T.accentSoft}, ${T.highlightSoft})`,border:`1px solid ${T.accentBorder}`,display:"flex",alignItems:"center",gap:14,cursor:"pointer",transition:"all 0.2s",marginBottom:6}} onMouseEnter={e=>{e.currentTarget.style.borderColor=T.accent;e.currentTarget.style.boxShadow=`0 4px 16px ${T.accent}15`;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=T.accentBorder;e.currentTarget.style.boxShadow="none";}}>
+          <div style={{width:36,height:36,borderRadius:10,background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 2px 8px rgba(28,25,23,0.1)"}}>{IC.sparkle("#fff",16)}</div>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:T.sans,fontSize:13,fontWeight:600,color:T.text,letterSpacing:"-0.01em"}}>Get today's insight</div>
+            <div style={{fontFamily:T.sans,fontSize:11.5,color:T.textSecondary,marginTop:1}}>AI will analyse activity, flag risks, and suggest next actions</div>
+          </div>
+          <div style={{padding:"7px 16px",borderRadius:99,background:T.accent,color:"#fff",fontSize:11.5,fontWeight:600,fontFamily:T.sans,flexShrink:0,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5}}>{IC.sparkle("#fff",10)} Ask</div>
+        </div>
+      </div>
+    </div>
+
     {/* Input */}
     <div style={{padding:"10px 32px 18px",flexShrink:0,position:"relative"}}>
       {/* Ambient glow */}
