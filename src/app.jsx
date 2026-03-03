@@ -65,7 +65,7 @@ function parseHash(){
   if(h==="home") return{phase:"workspace",page:"home",homeTab:"dashboard",appId:null};
   /* App detail route: #app/:appId */
   if(h.startsWith("app/")){const aId=h.slice(4);return{phase:"workspace",page:"catalog",homeTab:"dashboard",appId:aId};}
-  const validPages=["builder","connect","connectors","goals","people","catalog"];
+  const validPages=["builder","connect","connectors","goals","people","catalog","tasks","score","registers"];
   if(validPages.includes(h)) return{phase:"workspace",page:h,homeTab:"dashboard",appId:null};
   return{phase:"workspace",page:"home",homeTab:"dashboard",appId:null};
 }
@@ -193,6 +193,9 @@ function App(){
   const isConnectors=page==="connectors";
   const isGoals=page==="goals";
   const isPeople=page==="people";
+  const isTasks=page==="tasks";
+  const isScore=page==="score";
+  const isRegisters=page==="registers";
   const isCatalog=page==="catalog"&&!appDetailId;
   const isAppDetail=page==="catalog"&&!!appDetailId;
 
@@ -295,7 +298,7 @@ function App(){
               <div className="tb-icon">{IC.undo(T.textSecondary)}</div>
               <div className="tb-icon">{IC.redo(T.textSecondary)}</div>
             </div>
-          </>:<span style={{fontFamily:T.serif,fontSize:17,fontWeight:500,letterSpacing:"-0.02em"}}>{isConnect?"Workspace Setup":isConnectors?"Connectors":isGoals?"Goals":isPeople?"People":isAppDetail?(APP_CATALOG.find(a=>a.id===appDetailId)||{}).name||"App":isCatalog?"Catalog":"Home"}</span>}
+          </>:<span style={{fontFamily:T.serif,fontSize:17,fontWeight:500,letterSpacing:"-0.02em"}}>{isConnect?"Workspace Setup":isConnectors?"Connectors":isGoals?"Goals":isPeople?"People":isTasks?"Tasks":isScore?"Score":isRegisters?"Data Tables":isAppDetail?(APP_CATALOG.find(a=>a.id===appDetailId)||{}).name||"App":isCatalog?"Catalog":"Home"}</span>}
         </div>
         {/* Center area */}
         {isBuilder&&<div style={{position:"absolute",left:"50%",transform:"translateX(-50%)"}}>
@@ -323,6 +326,9 @@ function App(){
       {page==="connectors"&&<ConnectorsPage/>}
       {page==="goals"&&<GoalsPage industry={onboardIndustry} persona={onboardPersona} selectedGoals={selectedGoals} setSelectedGoals={setSelectedGoals} customGoals={customGoals} setCustomGoals={setCustomGoals} onNavigate={navigate}/>}
       {page==="people"&&<PeoplePage/>}
+      {page==="tasks"&&<TasksPage/>}
+      {page==="score"&&<ScorePage selectedGoals={selectedGoals} industry={onboardIndustry} onNavigate={navigate}/>}
+      {page==="registers"&&<RegistersPage/>}
       {page==="catalog"&&!appDetailId&&<CatalogPage installedApps={installedApps} setInstalledApps={setInstalledApps} onNavigate={(target)=>{if(APP_CATALOG.find(a=>a.id===target)){setAppDetailId(target);window.location.hash="#app/"+target;}else{navigate(target);}}} industry={onboardIndustry} addedConnectors={addedConnectors}/>}
       {page==="catalog"&&appDetailId&&<AppDetailPage appId={appDetailId} industry={onboardIndustry} addedConnectors={addedConnectors} onBack={()=>{setAppDetailId(null);window.location.hash="#catalog";}} onNavigate={navigate}/>}
     </div>

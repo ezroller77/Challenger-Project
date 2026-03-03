@@ -3422,6 +3422,339 @@ function GoalsPage({industry,persona,selectedGoals,setSelectedGoals,customGoals,
   </div>;
 }
 
+/* ═══ SCORE PAGE ═══ */
+
+function ScorePage({selectedGoals,industry,onNavigate}){
+  const[lens,setLens]=useState("risk");
+  const allGoals=getGoalsByIndustry(industry);
+  const activeGoals=allGoals.filter(g=>selectedGoals.includes(g.id));
+  const agg=computeAggregateScore(selectedGoals);
+  const signals=computeSignalAverages(selectedGoals);
+
+  const signalLabels={inspections:"Inspections",actions:"Actions",training:"Training",incidents:"Incidents",assets:"Assets",observations:"Observations"};
+
+  /* Sort goals by score */
+  const scoredGoals=useMemo(()=>
+    activeGoals.map(g=>({...g,scoreData:GOAL_SCORES[g.id]||{score:0,trend:0,signals:{}}}))
+      .sort((a,b)=>lens==="risk"?a.scoreData.score-b.scoreData.score:b.scoreData.score-a.scoreData.score)
+  ,[activeGoals,lens]);
+
+  const topRisks=scoredGoals.filter(g=>g.scoreData.score>0&&g.scoreData.score<3.0);
+  const topStrengths=scoredGoals.filter(g=>g.scoreData.score>=3.5);
+
+  return<div style={{flex:1,overflowY:"auto",background:T.bg}}>
+    <div style={{maxWidth:960,margin:"0 auto",padding:"28px 24px 64px"}}>
+
+      {/* Header */}
+      <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:28}}>
+        <div>
+          <h1 style={{fontFamily:T.serif,fontSize:24,fontWeight:500,letterSpacing:"-0.03em",color:T.text,margin:0}}>Score</h1>
+          <p style={{fontSize:13,color:T.textSecondary,marginTop:4,letterSpacing:"-0.01em"}}>Operational readiness across your active goals</p>
+        </div>
+        <LensToggle lens={lens} setLens={setLens}/>
+      </div>
+
+      {activeGoals.length===0?<div style={{textAlign:"center",padding:"80px 0"}}>
+        <div style={{width:56,height:56,borderRadius:16,background:T.surfaceMuted,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}>{IC.target(T.textTertiary,24)}</div>
+        <div style={{fontFamily:T.serif,fontSize:18,fontWeight:500,marginBottom:6}}>No goals selected</div>
+        <div style={{fontSize:13,color:T.textSecondary,marginBottom:20}}>Select goals to see your operational score</div>
+        <div onClick={()=>onNavigate("goals")} className="action-chip primary">Set up goals</div>
+      </div>:<>
+
+      {/* Aggregate score card */}
+      <div className="bento" style={{padding:"28px 32px",marginBottom:20}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:20}}>
+          <div>
+            <div className="lbl" style={{marginBottom:8}}>Overall Score</div>
+            <ScoreBadge score={agg.score} trend={agg.trend}/>
+            <div style={{marginTop:8}}><StarRating score={agg.score} size={22} gap={3}/></div>
+          </div>
+          <div style={{display:"flex",gap:20,flexWrap:"wrap"}}>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:T.serif,fontSize:28,fontWeight:500,color:T.text}}>{agg.count}</div>
+              <div style={{fontSize:11,color:T.textTertiary,fontFamily:T.mono}}>Active Goals</div>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:T.serif,fontSize:28,fontWeight:500,color:T.green}}>{topStrengths.length}</div>
+              <div style={{fontSize:11,color:T.textTertiary,fontFamily:T.mono}}>Strong</div>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:T.serif,fontSize:28,fontWeight:500,color:T.rose}}>{topRisks.length}</div>
+              <div style={{fontSize:11,color:T.textTertiary,fontFamily:T.mono}}>At Risk</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Signal breakdown */}
+      <div className="grid-bento" style={{marginBottom:24}}>
+        <div className="col-7">
+          <div className="bento" style={{padding:"22px 24px"}}>
+            <div className="lbl" style={{marginBottom:16}}>Signal Health</div>
+            {Object.entries(signals).map(([key,val])=>
+              <SignalBar key={key} label={signalLabels[key]||key} value={val}/>
+            )}
+          </div>
+        </div>
+        <div className="col-5">
+          <div className="bento" style={{padding:"22px 24px",height:"100%",display:"flex",flexDirection:"column"}}>
+            <div className="lbl" style={{marginBottom:14}}>{lens==="risk"?"Top Risks":"Top Strengths"}</div>
+            <div style={{flex:1,display:"flex",flexDirection:"column",gap:8}}>
+              {(lens==="risk"?topRisks:topStrengths).slice(0,5).map(g=>{
+                const color=g.scoreData.score<3.0?T.rose:g.scoreData.score>=3.5?T.green:T.amber;
+                return<div key={g.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",borderRadius:T.rSm,background:T.surfaceHover}}>
+                  <span style={{fontSize:12.5,color:T.text,fontWeight:500,flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{g.name}</span>
+                  <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+                    <span style={{fontSize:12,fontWeight:600,fontFamily:T.mono,color}}>{g.scoreData.score}</span>
+                    {g.scoreData.trend!==0&&<span style={{fontSize:10,color:g.scoreData.trend>0?T.green:T.rose}}>{g.scoreData.trend>0?"↑":"↓"}{Math.abs(g.scoreData.trend)}</span>}
+                  </div>
+                </div>;
+              })}
+              {(lens==="risk"?topRisks:topStrengths).length===0&&<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:T.textTertiary,fontSize:12}}>
+                {lens==="risk"?"No goals at risk":"No strong goals yet"}
+              </div>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* All goals table */}
+      <div className="bento" style={{padding:"22px 24px"}}>
+        <div className="lbl" style={{marginBottom:14}}>All Goals</div>
+        <div style={{display:"flex",flexDirection:"column",gap:4}}>
+          {scoredGoals.map((g,idx)=>{
+            const s=g.scoreData;
+            const color=s.score<3.0?T.rose:s.score>=3.5?T.green:T.amber;
+            return<div key={g.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:T.rSm,transition:"background 0.15s",cursor:"pointer",animation:`fadeIn 0.25s ease ${idx*0.02}s both`}} onMouseEnter={e=>e.currentTarget.style.background=T.surfaceHover} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:color,flexShrink:0}}/>
+              <span style={{flex:1,fontSize:13,color:T.text,fontWeight:500,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{g.name}</span>
+              <span style={{fontSize:11,color:T.textTertiary,fontFamily:T.mono,flexShrink:0}}>{g.category}</span>
+              <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
+                <StarRating score={s.score} size={10} gap={1}/>
+                <span style={{fontSize:12,fontWeight:600,fontFamily:T.mono,color,minWidth:28,textAlign:"right"}}>{s.score}</span>
+              </div>
+              {s.trend!==0&&<span className="chip" style={{background:s.trend>0?T.greenSoft:T.roseSoft,color:s.trend>0?T.green:T.rose,flexShrink:0}}>{s.trend>0?"↑":"↓"}{Math.abs(s.trend)}</span>}
+            </div>;
+          })}
+        </div>
+      </div>
+      </>}
+    </div>
+  </div>;
+}
+
+/* ═══ TASKS PAGE ═══ */
+
+const MOCK_TASKS=[
+  {id:1,title:"Complete monthly safety inspection — Plant Alpha",status:"overdue",priority:"High",assignee:"Sarah Chen",due:"28 Feb 2026",category:"Inspections"},
+  {id:2,title:"Review corrective actions from last audit",status:"in-progress",priority:"High",assignee:"Marcus Johnson",due:"5 Mar 2026",category:"Actions"},
+  {id:3,title:"Schedule forklift operator refresher training",status:"todo",priority:"Medium",assignee:"Ana Rodriguez",due:"10 Mar 2026",category:"Training"},
+  {id:4,title:"Update emergency evacuation plan signage",status:"todo",priority:"Medium",assignee:"Priya Patel",due:"12 Mar 2026",category:"Safety"},
+  {id:5,title:"Calibrate pressure gauges — Line 3",status:"in-progress",priority:"Medium",assignee:"James Wilson",due:"7 Mar 2026",category:"Maintenance"},
+  {id:6,title:"Submit environmental compliance report Q1",status:"todo",priority:"High",assignee:"Sarah Chen",due:"15 Mar 2026",category:"Compliance"},
+  {id:7,title:"Onboard new quality inspector — Plant Beta",status:"done",priority:"Low",assignee:"Lisa Thompson",due:"1 Mar 2026",category:"People"},
+  {id:8,title:"Investigate near-miss incident #NM-2026-041",status:"in-progress",priority:"High",assignee:"Priya Patel",due:"4 Mar 2026",category:"Incidents"},
+  {id:9,title:"Restock PPE inventory — warehouse",status:"done",priority:"Low",assignee:"David Kim",due:"26 Feb 2026",category:"Inventory"},
+  {id:10,title:"Review supplier quality scorecard — Q4",status:"todo",priority:"Medium",assignee:"Carlos Mendez",due:"14 Mar 2026",category:"Quality"},
+];
+
+const TASK_STATUS_META={
+  "overdue":{label:"Overdue",color:T.rose,bg:T.roseSoft,border:T.roseBorder},
+  "in-progress":{label:"In Progress",color:T.accent,bg:T.accentSoft,border:T.accentBorder},
+  "todo":{label:"To Do",color:T.textSecondary,bg:T.surfaceMuted,border:T.border},
+  "done":{label:"Done",color:T.green,bg:T.greenSoft,border:T.greenBorder},
+};
+
+function TasksPage(){
+  const[filter,setFilter]=useState("all");
+  const[selectedTask,setSelectedTask]=useState(null);
+
+  const counts=useMemo(()=>{
+    const c={all:MOCK_TASKS.length,overdue:0,"in-progress":0,todo:0,done:0};
+    MOCK_TASKS.forEach(t=>c[t.status]=(c[t.status]||0)+1);
+    return c;
+  },[]);
+
+  const filtered=useMemo(()=>
+    filter==="all"?MOCK_TASKS:MOCK_TASKS.filter(t=>t.status===filter)
+  ,[filter]);
+
+  const filters=[
+    {id:"all",label:"All"},
+    {id:"overdue",label:"Overdue"},
+    {id:"in-progress",label:"In Progress"},
+    {id:"todo",label:"To Do"},
+    {id:"done",label:"Done"},
+  ];
+
+  return<div style={{flex:1,overflowY:"auto",background:T.bg}}>
+    <div style={{maxWidth:860,margin:"0 auto",padding:"28px 24px 64px"}}>
+
+      {/* Header */}
+      <div style={{marginBottom:24}}>
+        <h1 style={{fontFamily:T.serif,fontSize:24,fontWeight:500,letterSpacing:"-0.03em",color:T.text,margin:0}}>Tasks</h1>
+        <p style={{fontSize:13,color:T.textSecondary,marginTop:4,letterSpacing:"-0.01em"}}>Track and manage operational tasks across your workspace</p>
+      </div>
+
+      {/* Summary chips */}
+      <div style={{display:"flex",gap:8,marginBottom:24,flexWrap:"wrap"}}>
+        {filters.map(f=>{
+          const active=filter===f.id;
+          const meta=TASK_STATUS_META[f.id];
+          const count=counts[f.id]||0;
+          return<div key={f.id} onClick={()=>setFilter(f.id)} style={{
+            padding:"6px 14px",borderRadius:99,fontSize:12,fontWeight:active?600:400,
+            background:active?(meta?meta.bg:T.accentSoft):T.surface,
+            border:`1px solid ${active?(meta?meta.border:T.accentBorder):T.border}`,
+            color:active?(meta?meta.color:T.accent):T.textSecondary,
+            cursor:"pointer",transition:"all 0.2s",display:"flex",alignItems:"center",gap:6,
+          }}>
+            <span>{f.label}</span>
+            <span style={{fontSize:10,fontFamily:T.mono,opacity:0.7}}>{count}</span>
+          </div>;
+        })}
+      </div>
+
+      {/* Task list */}
+      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+        {filtered.map((task,idx)=>{
+          const meta=TASK_STATUS_META[task.status];
+          const isSelected=selectedTask===task.id;
+          return<div key={task.id} onClick={()=>setSelectedTask(isSelected?null:task.id)} style={{
+            background:T.surface,border:`1px solid ${isSelected?T.accentBorder:T.border}`,
+            borderRadius:T.r,padding:"14px 18px",cursor:"pointer",
+            transition:"all 0.2s",boxShadow:isSelected?`0 0 0 2px ${T.accentSoft}`:T.shadow,
+            animation:`fadeIn 0.3s ease ${idx*0.03}s both`,
+          }} onMouseEnter={e=>{if(!isSelected)e.currentTarget.style.borderColor=T.borderSubtle;e.currentTarget.style.boxShadow=T.shadowMd;}} onMouseLeave={e=>{if(!isSelected)e.currentTarget.style.borderColor=T.border;e.currentTarget.style.boxShadow=isSelected?`0 0 0 2px ${T.accentSoft}`:T.shadow;}}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              {/* Checkbox */}
+              <div style={{width:20,height:20,borderRadius:6,border:`1.5px solid ${task.status==="done"?T.green:T.border}`,background:task.status==="done"?T.greenSoft:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                {task.status==="done"&&IC.check(T.green,12)}
+              </div>
+              {/* Content */}
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13.5,fontWeight:500,color:task.status==="done"?T.textTertiary:T.text,textDecoration:task.status==="done"?"line-through":"none",letterSpacing:"-0.01em"}}>{task.title}</div>
+                {isSelected&&<div style={{marginTop:10,display:"flex",flexDirection:"column",gap:8,animation:"fadeIn 0.2s ease"}}>
+                  <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+                    {[["Assignee",task.assignee],["Due",task.due],["Category",task.category],["Priority",task.priority]].map(([k,v])=>
+                      <div key={k}>
+                        <div style={{fontSize:10,textTransform:"uppercase",letterSpacing:"0.05em",fontFamily:T.mono,color:T.textTertiary,marginBottom:2}}>{k}</div>
+                        <div style={{fontSize:12,color:T.textSecondary,fontWeight:500}}>{v}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>}
+              </div>
+              {/* Right side */}
+              <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+                {task.priority==="High"&&<div className="chip" style={{background:T.roseSoft,color:T.rose}}>High</div>}
+                <div className="chip" style={{background:meta.bg,color:meta.color,border:`1px solid ${meta.border}`}}>{meta.label}</div>
+              </div>
+            </div>
+          </div>;
+        })}
+      </div>
+
+      {filtered.length===0&&<div style={{textAlign:"center",padding:"60px 0"}}>
+        <div style={{fontSize:13,color:T.textTertiary}}>No tasks match this filter</div>
+      </div>}
+    </div>
+  </div>;
+}
+
+/* ═══ REGISTERS (DATA TABLES) PAGE ═══ */
+
+const MOCK_REGISTERS=[
+  {id:"reg-inspections",name:"Inspections",records:1247,updated:"2 hours ago",status:"live",icon:IC.tasks,color:"#3B82F6",fields:["Site","Type","Date","Inspector","Score","Status"]},
+  {id:"reg-actions",name:"Corrective Actions",records:384,updated:"35 min ago",status:"live",icon:IC.check,color:"#10B981",fields:["Action","Assigned To","Priority","Due Date","Status","Source"]},
+  {id:"reg-incidents",name:"Incidents",records:89,updated:"1 day ago",status:"live",icon:IC.bolt,color:"#F43F5E",fields:["Incident ID","Date","Site","Severity","Root Cause","Status"]},
+  {id:"reg-assets",name:"Assets",records:562,updated:"4 hours ago",status:"live",icon:IC.builder,color:"#8B5CF6",fields:["Asset ID","Name","Location","Type","Last Service","Condition"]},
+  {id:"reg-training",name:"Training Records",records:2103,updated:"1 hour ago",status:"live",icon:IC.people,color:"#F59E0B",fields:["Employee","Course","Completed","Expiry","Score","Certificate"]},
+  {id:"reg-observations",name:"Observations",records:731,updated:"12 min ago",status:"live",icon:IC.target,color:"#06B6D4",fields:["Observer","Date","Site","Area","Category","Risk Level"]},
+  {id:"reg-permits",name:"Permits to Work",records:156,updated:"3 hours ago",status:"paused",icon:IC.shield,color:"#64748B",fields:["Permit No.","Type","Location","Issuer","Valid From","Valid To"]},
+  {id:"reg-suppliers",name:"Supplier Quality",records:48,updated:"3 days ago",status:"live",icon:IC.connector,color:"#EC4899",fields:["Supplier","Rating","Last Audit","Non-conformances","Status","Tier"]},
+];
+
+function RegistersPage(){
+  const[search,setSearch]=useState("");
+  const[searchFocused,setSearchFocused]=useState(false);
+  const[expandedId,setExpandedId]=useState(null);
+
+  const filtered=useMemo(()=>{
+    if(!search.trim())return MOCK_REGISTERS;
+    const q=search.toLowerCase();
+    return MOCK_REGISTERS.filter(r=>r.name.toLowerCase().includes(q));
+  },[search]);
+
+  const totalRecords=MOCK_REGISTERS.reduce((s,r)=>s+r.records,0);
+
+  return<div style={{flex:1,overflowY:"auto",background:T.bg}}>
+    <div style={{maxWidth:900,margin:"0 auto",padding:"28px 24px 64px"}}>
+
+      {/* Header */}
+      <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:24}}>
+        <div>
+          <h1 style={{fontFamily:T.serif,fontSize:24,fontWeight:500,letterSpacing:"-0.03em",color:T.text,margin:0}}>Data Tables</h1>
+          <p style={{fontSize:13,color:T.textSecondary,marginTop:4,letterSpacing:"-0.01em"}}>Structured data powering your workflows and goals</p>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontSize:11,color:T.textTertiary,fontFamily:T.mono}}>{totalRecords.toLocaleString()} total records</span>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div style={{marginBottom:24}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,padding:"11px 16px",borderRadius:T.r,background:T.surface,border:`1.5px solid ${searchFocused?T.accent:T.border}`,boxShadow:searchFocused?`0 0 0 3px ${T.accentSoft}`:T.shadow,transition:"all 0.2s"}}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={searchFocused?T.accent:T.textTertiary} strokeWidth="2" strokeLinecap="round" style={{flexShrink:0,transition:"stroke 0.2s"}}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input value={search} onChange={e=>setSearch(e.target.value)} onFocus={()=>setSearchFocused(true)} onBlur={()=>setSearchFocused(false)} placeholder="Search data tables..." style={{flex:1,border:"none",background:"none",fontSize:14,fontFamily:T.sans,color:T.text,outline:"none",letterSpacing:"-0.01em"}}/>
+          {search&&<div onClick={()=>setSearch("")} style={{cursor:"pointer",display:"flex",alignItems:"center",padding:2,borderRadius:4}} onMouseEnter={e=>e.currentTarget.style.background=T.surfaceMuted} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>{IC.x(T.textTertiary,14)}</div>}
+        </div>
+      </div>
+
+      {/* Register cards */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:14}}>
+        {filtered.map((reg,idx)=>{
+          const expanded=expandedId===reg.id;
+          return<div key={reg.id} onClick={()=>setExpandedId(expanded?null:reg.id)} className="bento" style={{
+            padding:"18px 20px",cursor:"pointer",
+            border:expanded?`1px solid ${T.accentBorder}`:`1px solid ${T.border}`,
+            boxShadow:expanded?`0 0 0 2px ${T.accentSoft}`:T.shadow,
+            animation:`fadeIn 0.3s ease ${idx*0.04}s both`,
+          }}>
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+              <div style={{width:36,height:36,borderRadius:10,background:`${reg.color}12`,display:"flex",alignItems:"center",justifyContent:"center"}}>{reg.icon(reg.color,18)}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:14,fontWeight:600,letterSpacing:"-0.01em",color:T.text}}>{reg.name}</div>
+                <div style={{fontSize:11,color:T.textTertiary,marginTop:1}}>Updated {reg.updated}</div>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:99,background:reg.status==="live"?T.greenSoft:T.amberSoft}}>
+                <div style={{width:5,height:5,borderRadius:"50%",background:reg.status==="live"?T.green:T.amber}}/>
+                <span style={{fontSize:9.5,fontWeight:600,color:reg.status==="live"?T.green:T.amber,fontFamily:T.mono,textTransform:"capitalize"}}>{reg.status}</span>
+              </div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <span style={{fontSize:12,fontFamily:T.mono,color:T.textSecondary}}>{reg.records.toLocaleString()} records</span>
+              <span style={{fontSize:11,color:T.textTertiary}}>{reg.fields.length} fields</span>
+            </div>
+
+            {/* Expanded view — field list */}
+            {expanded&&<div style={{marginTop:14,paddingTop:12,borderTop:`1px solid ${T.borderSubtle}`,animation:"fadeIn 0.2s ease"}}>
+              <div style={{fontSize:10,textTransform:"uppercase",letterSpacing:"0.06em",fontFamily:T.mono,color:T.textTertiary,marginBottom:8}}>Fields</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                {reg.fields.map(f=><span key={f} style={{padding:"3px 10px",borderRadius:99,background:T.surfaceMuted,fontSize:11,color:T.textSecondary,fontFamily:T.mono}}>{f}</span>)}
+              </div>
+            </div>}
+          </div>;
+        })}
+      </div>
+
+      {filtered.length===0&&search&&<div style={{textAlign:"center",padding:"60px 0"}}>
+        <div style={{fontSize:13,color:T.textTertiary}}>No tables match "{search}"</div>
+      </div>}
+    </div>
+  </div>;
+}
+
 /* ═══ PEOPLE PAGE ═══ */
 
 const DEPARTMENTS = [
@@ -7710,7 +8043,7 @@ function parseHash(){
   if(h==="home") return{phase:"workspace",page:"home",homeTab:"dashboard",appId:null};
   /* App detail route: #app/:appId */
   if(h.startsWith("app/")){const aId=h.slice(4);return{phase:"workspace",page:"catalog",homeTab:"dashboard",appId:aId};}
-  const validPages=["builder","connect","connectors","goals","people","catalog"];
+  const validPages=["builder","connect","connectors","goals","people","catalog","tasks","score","registers"];
   if(validPages.includes(h)) return{phase:"workspace",page:h,homeTab:"dashboard",appId:null};
   return{phase:"workspace",page:"home",homeTab:"dashboard",appId:null};
 }
@@ -7838,6 +8171,9 @@ function App(){
   const isConnectors=page==="connectors";
   const isGoals=page==="goals";
   const isPeople=page==="people";
+  const isTasks=page==="tasks";
+  const isScore=page==="score";
+  const isRegisters=page==="registers";
   const isCatalog=page==="catalog"&&!appDetailId;
   const isAppDetail=page==="catalog"&&!!appDetailId;
 
@@ -7940,7 +8276,7 @@ function App(){
               <div className="tb-icon">{IC.undo(T.textSecondary)}</div>
               <div className="tb-icon">{IC.redo(T.textSecondary)}</div>
             </div>
-          </>:<span style={{fontFamily:T.serif,fontSize:17,fontWeight:500,letterSpacing:"-0.02em"}}>{isConnect?"Workspace Setup":isConnectors?"Connectors":isGoals?"Goals":isPeople?"People":isAppDetail?(APP_CATALOG.find(a=>a.id===appDetailId)||{}).name||"App":isCatalog?"Catalog":"Home"}</span>}
+          </>:<span style={{fontFamily:T.serif,fontSize:17,fontWeight:500,letterSpacing:"-0.02em"}}>{isConnect?"Workspace Setup":isConnectors?"Connectors":isGoals?"Goals":isPeople?"People":isTasks?"Tasks":isScore?"Score":isRegisters?"Data Tables":isAppDetail?(APP_CATALOG.find(a=>a.id===appDetailId)||{}).name||"App":isCatalog?"Catalog":"Home"}</span>}
         </div>
         {/* Center area */}
         {isBuilder&&<div style={{position:"absolute",left:"50%",transform:"translateX(-50%)"}}>
@@ -7968,6 +8304,9 @@ function App(){
       {page==="connectors"&&<ConnectorsPage/>}
       {page==="goals"&&<GoalsPage industry={onboardIndustry} persona={onboardPersona} selectedGoals={selectedGoals} setSelectedGoals={setSelectedGoals} customGoals={customGoals} setCustomGoals={setCustomGoals} onNavigate={navigate}/>}
       {page==="people"&&<PeoplePage/>}
+      {page==="tasks"&&<TasksPage/>}
+      {page==="score"&&<ScorePage selectedGoals={selectedGoals} industry={onboardIndustry} onNavigate={navigate}/>}
+      {page==="registers"&&<RegistersPage/>}
       {page==="catalog"&&!appDetailId&&<CatalogPage installedApps={installedApps} setInstalledApps={setInstalledApps} onNavigate={(target)=>{if(APP_CATALOG.find(a=>a.id===target)){setAppDetailId(target);window.location.hash="#app/"+target;}else{navigate(target);}}} industry={onboardIndustry} addedConnectors={addedConnectors}/>}
       {page==="catalog"&&appDetailId&&<AppDetailPage appId={appDetailId} industry={onboardIndustry} addedConnectors={addedConnectors} onBack={()=>{setAppDetailId(null);window.location.hash="#catalog";}} onNavigate={navigate}/>}
     </div>
