@@ -221,18 +221,28 @@ function AppDetailPage({appId,industry,addedConnectors,onBack,onNavigate}){
         </div>
 
         {/* ── Agent Insights ── */}
-        {agentData&&(()=>{
+        {(()=>{
+          const agentData=APP_AGENT_INSIGHTS[appId];
+          if(!agentData)return null;
           const sevColor=(s)=>s==="high"?T.rose:s==="positive"?T.green:T.amber;
           const sevSoft=(s)=>s==="high"?T.roseSoft:s==="positive"?T.greenSoft:T.amberSoft;
           const sevBorder=(s)=>s==="high"?T.roseBorder:s==="positive"?T.greenBorder:T.amberBorder;
           const typeIcon=(t)=>t==="alert"?IC.bolt:t==="trend"?IC.chart:IC.sparkle;
           const typeLabel=(t)=>t==="alert"?"Alert":t==="trend"?"Trend":"Recommendation";
           return<div style={{marginBottom:28}}>
-            {/* Section header — lighter now that strip carries identity */}
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
-              <div className="lbl" style={{display:"flex",alignItems:"center",gap:6}}>{IC.sparkle(T.textTertiary,12)} Agent Insights</div>
-              <div style={{flex:1,height:1,background:T.borderSubtle}}/>
-              <span style={{fontFamily:T.mono,fontSize:10,color:T.textTertiary}}>Updated {agentData.lastRun}</span>
+            {/* Agent header */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:36,height:36,borderRadius:10,background:app.color+"18",border:`1px solid ${app.color}30`,display:"flex",alignItems:"center",justifyContent:"center"}}>{IC.sparkle(app.color,16)}</div>
+                <div>
+                  <div style={{fontFamily:T.sans,fontSize:14,fontWeight:600,color:T.text,letterSpacing:"-0.01em"}}>{agentData.agent}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:5,marginTop:2}}>
+                    <div style={{width:6,height:6,borderRadius:"50%",background:T.green,animation:"pulse 2s infinite"}}/>
+                    <span style={{fontSize:10.5,color:T.textTertiary,fontFamily:T.mono}}>Active · Updated {agentData.lastRun}</span>
+                  </div>
+                </div>
+              </div>
+              <div style={{padding:"7px 16px",borderRadius:99,background:app.color,color:"#fff",fontSize:11.5,fontWeight:600,fontFamily:T.sans,cursor:"pointer",display:"flex",alignItems:"center",gap:5,transition:"opacity 0.15s"}} onMouseEnter={e=>{e.currentTarget.style.opacity="0.85";}} onMouseLeave={e=>{e.currentTarget.style.opacity="1";}}>{IC.sparkle("#fff",11)} Ask Agent</div>
             </div>
             {/* Insight cards */}
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -256,23 +266,6 @@ function AppDetailPage({appId,industry,addedConnectors,onBack,onNavigate}){
             </div>
           </div>;
         })()}
-
-        {/* ── Agent Actions (what the agent has done) ── */}
-        {agentData&&agentData.agentActions&&agentData.agentActions.length>0&&<div style={{marginBottom:28}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
-            <div className="lbl" style={{display:"flex",alignItems:"center",gap:6}}>{IC.check(T.textTertiary,12)} Actions Taken</div>
-            <div style={{flex:1,height:1,background:T.borderSubtle}}/>
-          </div>
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
-            {agentData.agentActions.map((act,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:T.rSm,background:T.surfaceHover,border:`1px solid ${T.borderSubtle}`,animation:`fadeIn 0.3s ease ${i*0.06}s both`}}>
-              <div style={{width:28,height:28,borderRadius:7,background:app.color+"15",border:`1px solid ${app.color}25`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{IC.sparkle(app.color,11)}</div>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontFamily:T.sans,fontSize:12.5,color:T.text,lineHeight:1.4}}>{act.text}</div>
-              </div>
-              <span style={{fontFamily:T.mono,fontSize:10,color:T.textTertiary,flexShrink:0,whiteSpace:"nowrap"}}>{act.time}</span>
-            </div>)}
-          </div>
-        </div>}
 
         {/* Connected goals + People row */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:28}}>
